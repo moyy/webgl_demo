@@ -1,0 +1,206 @@
+<html>
+
+<head>
+
+    <!--------------- 通用 --------------->
+
+    <script type="text/javascript" src="./common/camera.js"></script>
+    <script type="text/javascript" src="./common/context.js"></script>
+    <script type="text/javascript" src="./common/gl-matrix-2.2.1.js"></script>
+    <script type="text/javascript" src="./common/mesh.js"></script>
+    <script type="text/javascript" src="./common/program.js"></script>
+
+    <!--------------- 各种形状 --------------->
+
+    <script type="text/javascript" src="./shape/border.js"></script>
+    <script type="text/javascript" src="./shape/color_material.js"></script>
+    <script type="text/javascript" src="./shape/round_rect.js"></script>
+    <script type="text/javascript" src="./shape/sdf_circle.js"></script>
+    <script type="text/javascript" src="./shape/sdf_ellipse.js"></script>
+    <script type="text/javascript" src="./shape/sdf_rect.js"></script>
+
+    <!--------------- Shader --------------->
+
+    <script type="text/javascript" src="./shader/color.vs.js"></script>
+    <script type="text/javascript" src="./shader/color.fs.js"></script>
+    <script type="text/javascript" src="./shader/sdf_border_conner.fs.js"></script>
+    <script type="text/javascript" src="./shader/sdf_circle.fs.js"></script>
+    <script type="text/javascript" src="./shader/sdf_ellipse.fs.js"></script>
+    <script type="text/javascript" src="./shader/sdf_rect.fs.js"></script>
+    <script type="text/javascript" src="./shader/sdf.vs.js"></script>
+
+    <script type="text/javascript">
+        function webGLStart() {
+            let canvas = document.getElementById("png_demo");
+            let context = Context.create(canvas);
+
+            addSdfCircle(context, 50, 500, 60, 0);
+            addSdfRect(context, 200, 100, 500, 300, -Math.PI / 8);
+
+            addSdfEllipse(context, 90, 30, 100, 100, Math.PI / 16);
+            addSdfEllipse(context, 50, 25, 300, 300, -Math.PI / 4);
+            
+            addSdfBorderConner(context, 100, 200, true, true, [60, 100], 320, 570, 0);
+
+            let cornor = [
+                [140, 60],
+                [140, 60],
+                [140, 0],
+                [140, 60]
+            ];
+            addRoundRect(context, 400, 200, cornor, 700, 500, -Math.PI/3);
+
+            drawScene(context);
+        }
+
+        let frame = 0;
+        let lastTime = 0;
+        function drawScene(context) {
+            requestAnimationFrame(() => {
+                frame++;
+                drawScene(context);
+                let now = performance.now();
+                if (now - lastTime > 1000) {
+                    console.warn("fps: " + frame);
+                    lastTime = now;
+                    frame = 0;
+                }
+            });
+
+            context.draw();
+        }
+
+        function addSdfEllipse(context, a, b, x, y, rad, color) {
+            if (!color) {
+                color = [1.0, 0.0, 0.0, 1.0];
+            }
+
+            let padding = 3;
+
+            let e = SdfEllipse.create(context.gl, a, b, padding);
+
+            let m = mat4.create();
+            mat4.identity(m);
+            mat4.translate(m, m, [x, y, 0.0]);
+            mat4.rotateZ(m, m, rad);
+            mat4.scale(m, m, [2 * a + padding, 2 * b + padding, 1.0]);
+
+            e.material.setWorldMatrix(m);
+            e.material.setColor(...color);
+
+            context.addMesh(e);
+        }
+
+        function addSdfBorderConner(context, w, h, isLeft, isTop, smallWH, x, y, rad, color) {
+            if (!color) {
+                color = [1.0, 0.0, 0.0, 1.0];
+            }
+
+            let padding = 3;
+
+            let e = SdfBorderConner.create(context.gl, w, h, isLeft, isTop, smallWH);
+
+            let m = mat4.create();
+            mat4.identity(m);
+            mat4.translate(m, m, [x, y, 0.0]);
+            mat4.rotateZ(m, m, rad);
+            mat4.scale(m, m, [w, h, 1.0]);
+
+            e.material.setWorldMatrix(m);
+            e.material.setColor(...color);
+
+            context.addMesh(e);
+        }
+
+        function addSdfCircle(context, r, x, y, rad, color) {
+            if (!color) {
+                color = [1.0, 0.0, 0.0, 1.0];
+            }
+
+            let padding = 3;
+
+            let c = SdfCircle.create(context.gl, r, padding);
+
+            let m = mat4.create();
+            mat4.identity(m);
+            mat4.translate(m, m, [x, y, 0.0]);
+            mat4.rotateZ(m, m, rad);
+            mat4.scale(m, m, [2 * r + padding, 2 * r + padding, 1.0]);
+
+            c.material.setWorldMatrix(m);
+            c.material.setColor(...color);
+
+            context.addMesh(c);
+        }
+
+        function addSdfRect(context, w, h, x, y, rad, color) {
+
+            if (!color) {
+                color = [1.0, 0.0, 0.0, 1.0];
+            }
+
+            let padding = 3;
+
+            let r = SdfRect.create(context.gl, w, h, padding);
+
+            let m = mat4.create();
+            mat4.identity(m);
+            mat4.translate(m, m, [x, y, 0.0]);
+            mat4.rotateZ(m, m, rad);
+            mat4.scale(m, m, [w + padding, h + padding, 1.0]);
+
+            r.material.setWorldMatrix(m);
+            r.material.setColor(...color);
+
+            context.addMesh(r);
+        }
+
+        function addSdfRect(context, w, h, x, y, rad, color) {
+
+            if (!color) {
+                color = [1.0, 0.0, 0.0, 1.0];
+            }
+
+            let padding = 3;
+
+            let r = SdfRect.create(context.gl, w, h, padding);
+
+            let m = mat4.create();
+            mat4.identity(m);
+            mat4.translate(m, m, [x, y, 0.0]);
+            mat4.rotateZ(m, m, rad);
+            mat4.scale(m, m, [w + padding, h + padding, 1.0]);
+
+            r.material.setWorldMatrix(m);
+            r.material.setColor(...color);
+
+            context.addMesh(r);
+        }
+
+        function addRoundRect(context, w, h, info, x, y, rad, color) {
+
+            if (!color) {
+                color = [1.0, 0.0, 0.0, 1.0];
+            }
+
+            let r = RoundRect.create(context.gl, w, h, info);
+
+            let m = mat4.create();
+            mat4.identity(m);
+            mat4.translate(m, m, [x, y, 0.0]);
+            mat4.rotateZ(m, m, rad);
+            mat4.scale(m, m, [1, 1, 1.0]);
+
+            r.setWorldMatrix(m);
+            r.setColor(...color);
+
+            context.addMesh(r);
+        }
+    </script>
+</head>
+
+<body onload="webGLStart();" style="background-color: #000;">
+    <canvas id="png_demo" width="1024" height="768" style="position:absolute; left:100px; top:100px"></canvas>
+</body>
+
+</html>
