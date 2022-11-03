@@ -23,7 +23,7 @@ ProgramManager.getInstance().addShader("sdf.vs", `
 
         vec2 center = uVertexScale.xy;
         // 椭圆的 中心点 移动到 (0, 0)
-        vVertexPosition = uVertexScale.zw * aVertexPosition - center;
+        vVertexPosition = uVertexScale.zw * (aVertexPosition - center);
 
         gl_Position = uProj * uView * uWorld * vec4(aVertexPosition, 0.0, 1.0);
     }
