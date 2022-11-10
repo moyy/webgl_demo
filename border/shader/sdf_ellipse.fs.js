@@ -2,7 +2,7 @@ ProgramManager.getInstance().addShader("sdf_ellipse.fs", `
 
     #extension GL_OES_standard_derivatives : require
 
-    precision mediump float;
+    precision highp float;
 
     // 颜色
     uniform vec4 uColor;

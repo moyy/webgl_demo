@@ -70,7 +70,12 @@ class SdfRect {
         gl.enableVertexAttribArray(aVertexPosition);
 
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ibo.id);
-        gl.drawElements(gl.TRIANGLES, this.ibo.numItems, gl.UNSIGNED_SHORT, 0);
+
+        let count = 440;
+        // console.warn("=========== dc = " + count);
+        for (let i = 0; i < count; ++i) {
+            gl.drawElements(gl.TRIANGLES, this.ibo.numItems, gl.UNSIGNED_SHORT, 0);
+        }
     }
 }
 

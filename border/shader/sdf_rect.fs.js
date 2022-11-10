@@ -2,7 +2,7 @@ ProgramManager.getInstance().addShader("sdf_rect.fs", `
 
     #extension GL_OES_standard_derivatives : require
 
-    precision mediump float;
+    precision highp float;
 
     // 颜色
     uniform vec4 uColor;
@@ -36,10 +36,7 @@ ProgramManager.getInstance().addShader("sdf_rect.fs", `
 
     void main() {
         float d = sdfRect(vVertexPosition, uExtent);
-        
-        // gl_FragColor = vec4(d, 0.0, 0.0, 1.0);
-
-        float a = antialiase(d);
-        gl_FragColor = vec4(uColor.rgb, a * uColor.a);
+        gl_FragColor = vec4(1.0, 0.0, 0.0, 0.5);
     }
+    
     `);

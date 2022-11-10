@@ -11,10 +11,10 @@
  * 
  */
 class SdfBorderConner {
-    static create(gl, w, h, isLeft, isTop, smallWH) {
+    static create(gl, count, w, h, isLeft, isTop, smallWH) {
         let program = ProgramManager.getInstance().getProgram("sdf.vs", "sdf_border_conner.fs");
 
-        let e = new SdfBorderConner(gl, program);
+        let e = new SdfBorderConner(gl, count, program);
         e.material.setEllipseAB(...smallWH, w, h);
 
         let x = isLeft ? -w / 2 : w / 2;
@@ -44,9 +44,9 @@ class SdfBorderConner {
         return e;
     }
 
-    constructor(gl, program) {
+    constructor(gl, count, program) {
         this.gl = gl;
-
+        this.count = count;
         this.material = new SdfBorderConnerMaterial(gl, program);
 
         this.vbo = {
@@ -81,8 +81,10 @@ class SdfBorderConner {
         gl.enableVertexAttribArray(aVertexPosition);
 
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ibo.id);
-
-        gl.drawElements(gl.TRIANGLES, this.ibo.numItems, gl.UNSIGNED_SHORT, 0);
+        
+        for (let i = 0; i < this.count; ++i) {
+            gl.drawElements(gl.TRIANGLES, this.ibo.numItems, gl.UNSIGNED_SHORT, 0);
+        }
     }
 }
 

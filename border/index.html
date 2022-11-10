@@ -15,6 +15,7 @@
     <script type="text/javascript" src="./shape/border.js"></script>
     <script type="text/javascript" src="./shape/color_material.js"></script>
     <script type="text/javascript" src="./shape/round_rect.js"></script>
+    <script type="text/javascript" src="./shape/sdf_round_rect.js"></script>
     <script type="text/javascript" src="./shape/sdf_circle.js"></script>
     <script type="text/javascript" src="./shape/sdf_ellipse.js"></script>
     <script type="text/javascript" src="./shape/sdf_rect.js"></script>
@@ -23,6 +24,8 @@
 
     <script type="text/javascript" src="./shader/color.vs.js"></script>
     <script type="text/javascript" src="./shader/color.fs.js"></script>
+    <script type="text/javascript" src="./shader/sdf_round_rect.vs.js"></script>
+    <script type="text/javascript" src="./shader/sdf_round_rect.fs.js"></script>
     <script type="text/javascript" src="./shader/sdf_border_conner.fs.js"></script>
     <script type="text/javascript" src="./shader/sdf_circle.fs.js"></script>
     <script type="text/javascript" src="./shader/sdf_ellipse.fs.js"></script>
@@ -34,34 +37,37 @@
             let canvas = document.getElementById("png_demo");
             let context = Context.create(canvas);
 
-            addSdfCircle(context, 50, 500, 60, 0);
-            addSdfRect(context, 200, 100, 500, 300, -Math.PI / 8);
+            // addSdfCircle(context, 50, 500, 60, 0);
 
-            addSdfEllipse(context, 90, 30, 100, 100, Math.PI / 16);
-            addSdfEllipse(context, 50, 25, 300, 300, -Math.PI / 4);
-            
-            addSdfBorderConner(context, 100, 200, true, true, [60, 100], 320, 570, 0);
+            let borders = [200, 100, 0, 0, 50, 100, 100, 50];
 
-            let cornor = [
-                [140, 60],
-                [140, 60],
-                [140, 0],
-                [140, 60]
-            ];
-            addRoundRect(context, 400, 200, cornor, 700, 500, -Math.PI/3);
+            addSdfRoundRect(context, 800, 400, borders, 50, 40, 0);
+
+            // addSdfRect(context, canvas.width, canvas.height, canvas.width / 2, canvas.height / 2, 0);
+
+            // addSdfEllipse(context, 90, 30, 100, 100, Math.PI / 16);
+            // addSdfEllipse(context, 50, 25, 300, 300, -Math.PI / 4);
+
+            // addSdfBorderConner(context, 1, 100, 200, true, true, [60, 100], 320, 570, 0);
+
+            // addSdfBorderConner(context, 1170, 1024, 768, true, true, [1, 1], 1024/2, 768/2, 0);
+
+            // addRoundRect(context, 700, 700, borders, 500, 400, 0);
 
             drawScene(context);
         }
 
         let frame = 0;
         let lastTime = 0;
+
         function drawScene(context) {
             requestAnimationFrame(() => {
                 frame++;
                 drawScene(context);
                 let now = performance.now();
-                if (now - lastTime > 1000) {
-                    console.warn("fps: " + frame);
+                let tm = now - lastTime;
+                if (tm > 1000) {
+                    console.warn("fps: " + Math.round(frame * 1000 / tm * 10) / 10);
                     lastTime = now;
                     frame = 0;
                 }
@@ -91,14 +97,14 @@
             context.addMesh(e);
         }
 
-        function addSdfBorderConner(context, w, h, isLeft, isTop, smallWH, x, y, rad, color) {
+        function addSdfBorderConner(context, count, w, h, isLeft, isTop, smallWH, x, y, rad, color) {
             if (!color) {
                 color = [1.0, 0.0, 0.0, 1.0];
             }
 
             let padding = 3;
 
-            let e = SdfBorderConner.create(context.gl, w, h, isLeft, isTop, smallWH);
+            let e = SdfBorderConner.create(context.gl, count, w, h, isLeft, isTop, smallWH);
 
             let m = mat4.create();
             mat4.identity(m);
@@ -177,6 +183,29 @@
             context.addMesh(r);
         }
 
+        function addSdfRoundRect(context, w, h, borders, x, y, rad, color) {
+
+            if (!color) {
+                color = [1.0, 0.0, 0.0, 1.0];
+            }
+
+            let padding = 3;
+
+            let r = SdfRoundRect.create(context.gl, w, h, borders);
+
+            let m = mat4.create();
+            mat4.identity(m);
+            mat4.translate(m, m, [x, y, 0.0]);
+            mat4.rotateZ(m, m, rad);
+            mat4.scale(m, m, [w, h, 1.0]);
+
+            r.mesh.setDrawCount(1);
+            r.mesh.material.setWorldMatrix(m);
+            r.mesh.material.setColor(...color);
+
+            context.addMesh(r);
+        }
+
         function addRoundRect(context, w, h, info, x, y, rad, color) {
 
             if (!color) {
@@ -191,6 +220,7 @@
             mat4.rotateZ(m, m, rad);
             mat4.scale(m, m, [1, 1, 1.0]);
 
+            r.setDrawCount(100);
             r.setWorldMatrix(m);
             r.setColor(...color);
 

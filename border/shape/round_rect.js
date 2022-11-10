@@ -4,31 +4,39 @@
 class RoundRect {
 
     // TODO 这里 暂时 不处理 半径超过 宽高的情况
-    // borderInfo = [左上, 左下, 右下，右上]
-    // 左上 / 左下 / 右下 / 右上 = [宽度半径, 高度半径]
+    // conners = [左, 上, 上, 右, 右, 下, 下, 左]
     // 处理方式，分成 4个椭圆 和 1个 凸-八边形
-    static create(gl, w, h, borderInfo) {
+    static create(gl, w, h, conners) {
         let e = new RoundRect(gl);
 
+        var lt, tp, rg, bt;
+
+        w /= 2;
+        h /= 2;
+
         // 左上角
-        let lt = borderInfo[0];
-        let p0 = [-w / 2 + lt[0], -h / 2];
-        let p1 = [-w / 2, -h / 2 + lt[1]];
-
-        // 左下角
-        let lb = borderInfo[1];
-        let p2 = [-w / 2, h / 2 - lb[1]];
-        let p3 = [-w / 2 + lb[0], h / 2];
-
-        // 右下角
-        let rb = borderInfo[2];
-        let p4 = [w / 2 - rb[0], h / 2];
-        let p5 = [w / 2, h / 2 - rb[1]];
+        lt = conners[0];
+        tp = conners[1];
+        let p0 = [-w, -h + lt];
+        let p1 = [-w + tp, -h];
 
         // 右上角
-        let rt = borderInfo[3];
-        let p6 = [w / 2, -h / 2 + rt[1]];
-        let p7 = [w / 2 - rt[0], -h / 2];
+        tp = conners[2];
+        rg = conners[3];
+        let p2 = [w - tp, -h];
+        let p3 = [w, -h + rg];
+
+        // 右下角
+        rg = conners[4];
+        bt = conners[5];
+        let p4 = [w, h - rg];
+        let p5 = [w - bt, h];
+
+        // 左下角
+        bt = conners[6];
+        lt = conners[7];
+        let p6 = [-w + bt, h];
+        let p7 = [-w, h - lt];
 
         let center = [0, 0];
 
@@ -51,51 +59,72 @@ class RoundRect {
 
         let program = ProgramManager.getInstance().getProgram("color.vs", "color.fs");
         let colorMaterial = ColorMaterial.create(gl, program);
-        e.colorMesh = new Mesh(gl, colorPosition, colorIndices, colorMaterial);
+        e.colorMesh = Mesh.create(gl);
+        e.colorMesh.setMaterial(colorMaterial);
+        e.colorMesh.setIndices(colorIndices);
+        e.colorMesh.addAttribute("aVertexPosition", 2, colorPosition);
 
         // ============== 四个角的椭圆
-
-        lt = [-w / 2, -h / 2];
-        lb = [-w / 2, h / 2];
-        rb = [w / 2, h / 2];
-        rt = [w / 2, -h / 2];
-
         program = ProgramManager.getInstance().getProgram("sdf.vs", "sdf_ellipse.fs");
 
-        let [bw, bh] = borderInfo[0];
-        if (bw > 0 && bh > 0) {
+        let a = conners[1];
+        let b = conners[0];
+        if (a > 0 && b > 0) {
             let m = SdfEllipseMaterial.create(gl, program);
-            center = [-w / 2 + bw, -h / 2 + bh];
+            center = [-w + a, -h + b];
             m.setVertexScale(center[0], center[1], 1, 1);
-            m.setEllipseAB(bw, bh);
-            e.ellipseMeshes.push(new Mesh(gl, [...p0, ...lt, ...p1], [0, 1, 2], m));
+            m.setEllipseAB(a, b);
+
+            let mesh = Mesh.create(gl);
+            mesh.setMaterial(m);
+            mesh.setIndices([0, 1, 2]);
+            mesh.addAttribute("aVertexPosition", 2, [...p0, ...[-w, -h], ...p1]);
+            e.ellipseMeshes.push(mesh);
         }
 
-        [bw, bh] = borderInfo[1];
-        if (bw > 0 && bh > 0) {
+        a = conners[2];
+        b = conners[3];
+        if (a > 0 && b > 0) {
             let m = SdfEllipseMaterial.create(gl, program);
-            center = [-w / 2 + bw, h / 2 - bh];
+            center = [w - a, -h + b];
             m.setVertexScale(center[0], center[1], 1, 1);
-            m.setEllipseAB(bw, bh);
-            e.ellipseMeshes.push(new Mesh(gl, [...p2, ...lb, ...p3], [0, 1, 2], m));
+            m.setEllipseAB(a, b);
+
+            let mesh = Mesh.create(gl);
+            mesh.setMaterial(m);
+            mesh.setIndices([0, 1, 2]);
+            mesh.addAttribute("aVertexPosition", 2, [...p2, ...[w, -h], ...p3]);
+            e.ellipseMeshes.push(mesh);
         }
 
-        [bw, bh] = borderInfo[2];
-        if (bw > 0 && bh > 0) {
+        a = conners[5];
+        b = conners[4];
+        if (a > 0 && b > 0) {
             let m = SdfEllipseMaterial.create(gl, program);
-            center = [w / 2 - bw, h / 2 - bh];
+            center = [w - a, h - b];
             m.setVertexScale(center[0], center[1], 1, 1);
-            m.setEllipseAB(bw, bh);
-            e.ellipseMeshes.push(new Mesh(gl, [...p4, ...rb, ...p5], [0, 1, 2], m));
+            m.setEllipseAB(a, b);
+
+            let mesh = Mesh.create(gl);
+            mesh.setMaterial(m);
+            mesh.setIndices([0, 1, 2]);
+            mesh.addAttribute("aVertexPosition", 2, [...p4, ...[w, h], ...p5]);
+            e.ellipseMeshes.push(mesh);
         }
 
-        [bw, bh] = borderInfo[3];
-        if (bw > 0 && bh > 0) {
+        a = conners[6];
+        b = conners[7];
+        if (a > 0 && b > 0) {
             let m = SdfEllipseMaterial.create(gl, program);
-            center = [w / 2 - bw, -h / 2 + bh];
+            center = [-w + a, h - b];
             m.setVertexScale(center[0], center[1], 1, 1);
-            m.setEllipseAB(bw, bh);
-            e.ellipseMeshes.push(new Mesh(gl, [...p6, ...rt, ...p7], [0, 1, 2], m));
+            m.setEllipseAB(a, b);
+
+            let mesh = Mesh.create(gl);
+            mesh.setMaterial(m);
+            mesh.setIndices([0, 1, 2]);
+            mesh.addAttribute("aVertexPosition", 2, [...p6, ...[-w, h], ...p7]);
+            e.ellipseMeshes.push(mesh);
         }
 
         return e;
@@ -105,6 +134,15 @@ class RoundRect {
         this.gl = gl;
         this.colorMesh = null;
         this.ellipseMeshes = [];
+    }
+
+    setDrawCount(count) {
+        if (this.colorMesh) {
+            this.colorMesh.setDrawCount(count);
+        }
+        for (let m of this.ellipseMeshes) {
+            m.setDrawCount(count);
+        }
     }
 
     setColor(r, g, b, a) {
@@ -135,4 +173,3 @@ class RoundRect {
         }
     }
 }
-
