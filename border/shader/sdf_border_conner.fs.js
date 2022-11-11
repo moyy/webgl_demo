@@ -79,17 +79,21 @@ ProgramManager.getInstance().addShader("sdf_border_conner.fs", `
 
         return a_big - a_small;
     }
+    
+    uniform vec4 uVertexScale;
 
     void main() {
+        vec2 pos = uVertexScale.zw * vVertexPosition - uVertexScale.xy;
+
         vec2 small = uEllipseAB.xy;
-        float small_d = sdfEllipseSimple(vVertexPosition, small);
+        float small_d = sdfEllipseSimple(pos, small);
         
         vec2 big = uEllipseAB.zw;
-        float big_d = sdfEllipseSimple(vVertexPosition, big);
+        float big_d = sdfEllipseSimple(pos, big);
 
         float a = antialiase_between(small_d, big_d);
         
-        vec3 color = computeGradientColor(vVertexPosition);
+        vec3 color = computeGradientColor(pos);
         gl_FragColor = vec4(color, a * uColor.a);
     }
     `);

@@ -32,9 +32,12 @@ ProgramManager.getInstance().addShader("sdf_circle.fs", `
         
         return 1.0 - smoothstep(-anti, anti, d);
     }
-
+    
+    uniform vec4 uVertexScale;
+    
     void main() {
-        float d = sdfCircle(vVertexPosition, uRadius);
+        vec2 pos = uVertexScale.zw * vVertexPosition - uVertexScale.xy;
+        float d = sdfCircle(pos, uRadius);
         
         float a = antialiase(d);
         

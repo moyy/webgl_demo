@@ -1,15 +1,10 @@
 /**
- * 圆角矩形
+ * 扇形
  */
-class SdfRoundRect {
+class SdfPie {
 
-    // TODO 这里 暂时 不处理 半径超过 宽高的情况
-    // borders = [左, 上, 上, 右, 右, 下, 下, 左]
-    static create(gl, w, h, borders) {
-        let e = new SdfRoundRect(gl);
-
-        w /= 2;
-        h /= 2;
+    static create(gl, r, radPie, radAxis) {
+        let e = new SdfPie(gl);
 
         let aVertexPosition = [
             ...[0, 0],
@@ -23,13 +18,14 @@ class SdfRoundRect {
             0, 2, 3,
         ];
 
-        let program = ProgramManager.getInstance().getProgram("sdf.vs", "sdf_round_rect.fs");
+        let program = ProgramManager.getInstance().getProgram("sdf.vs", "sdf_pie.fs");
 
-        let material = SdfRoundRectMaterial.create(gl, program);
+        let material = SdfPieMaterial.create(gl, program);
         material.setInfo(
-            w, h,
-            w, h, 2 * w, 2 * h,
-            borders
+            r, r, 2 * r, 2 * r,
+            Math.sin(radAxis), Math.cos(radAxis),
+            Math.sin(radPie), Math.cos(radPie),
+            r,
         );
         e.mesh = Mesh.create(gl);
 
@@ -51,9 +47,9 @@ class SdfRoundRect {
     }
 }
 
-class SdfRoundRectMaterial {
+class SdfPieMaterial {
     static create(gl, program) {
-        return new SdfRoundRectMaterial(gl, program);
+        return new SdfPieMaterial(gl, program);
     }
 
     constructor(gl, program) {
@@ -62,32 +58,34 @@ class SdfRoundRectMaterial {
 
         this.uColor = [0.0, 0.0, 1.0, 1.0];
 
+        this.uPieSdf = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+
         this.uWorld = mat4.create();
         mat4.identity(this.uWorld);
     }
 
     setWorldMatrix(m) {
         this.uWorld = m;
+        console.log("this.uWorld = ", this.uWorld);
     }
 
     setColor(r, g, b, a) {
         this.uColor = [r, g, b, a];
     }
 
-    // [half_w, half_h],
-    // [offset_x, offset_y],
-    // [左, 上, 上, 右, 右, 下, 下, 左]
     setInfo(
-        half_w, half_h,
         offset_x, offset_y,
         scale_x, scale_y,
-        borders
-    ) {
-        this.uBorderSdf = new Float32Array([
-            offset_x, offset_y, scale_x, scale_y,
-            half_w, half_h, 0, 0,
-            ...borders,
+        cosAxis, sinAxis,
+        cosPie, sinPie,
+        r) {
+        this.uPieSdf = new Float32Array([
+            offset_x, offset_y, scale_x,
+            scale_y, cosAxis, sinAxis,
+            cosPie, sinPie, r
         ]);
+
+        console.log("this.uPieSdf = ", this.uPieSdf);
     }
 
     use(camera) {
@@ -108,7 +106,7 @@ class SdfRoundRectMaterial {
         let uColor = program.getUniform("uColor");
         gl.uniform4f(uColor, ...this.uColor);
 
-        let uBorderSdf = program.getUniform("uBorderSdf");
-        gl.uniformMatrix4fv(uBorderSdf, false, this.uBorderSdf);
+        let uPieSdf = program.getUniform("uPieSdf");
+        gl.uniformMatrix3fv(uPieSdf, false, this.uPieSdf);
     }
 }

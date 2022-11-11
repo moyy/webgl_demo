@@ -97,6 +97,9 @@ ProgramManager.getInstance().addShader("sdf_round_rect.fs", `
         float a_rect = antialiase(d_rect);
 
         vec2 center = vec2(-extent.x + offset1.x, -extent.y + offset1.y); 
+        
+        // mix(begin, end, f)
+
         if (is_left_top(pt, extent, center)) {
             float d = sdfEllipse(pt, center, abs(offset1));
             float a = antialiase(d);
@@ -129,7 +132,7 @@ ProgramManager.getInstance().addShader("sdf_round_rect.fs", `
 
     void main() {
         vec4 scale = uBorderSdf[0];
-        vec2 pos = scale.zw * (vVertexPosition) - scale.xy;
+        vec2 pos = scale.zw * vVertexPosition - scale.xy;
 
         vec4 top = uBorderSdf[2];
         vec4 bottom = uBorderSdf[3];

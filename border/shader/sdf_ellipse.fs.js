@@ -77,9 +77,12 @@ ProgramManager.getInstance().addShader("sdf_ellipse.fs", `
         
         return 1.0 - smoothstep(-anti, anti, d);
     }
+    
+    uniform vec4 uVertexScale;
 
     void main() {
-        float d = sdfEllipseSimple(vVertexPosition, uEllipseAB);
+        vec2 pos = uVertexScale.zw * vVertexPosition - uVertexScale.xy;
+        float d = sdfEllipseSimple(pos, uEllipseAB);
         
         float a = antialiase(d);
         

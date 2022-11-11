@@ -10,6 +10,16 @@ ProgramManager.getInstance().addShader("sdf_rect.fs", `
     // 矩形 半宽，半高
     uniform vec2 uExtent;
 
+    
+    // uVertexScale.xy 椭圆 中心，在 物体空间 的 位置；
+    //    例1: aVertexPosition 范围是 [-0.5, 0.5] 变成 200*100 矩形 时，缩放系数 是 vec2(200, 100)
+    //    例2: aVertexPosition 范围是 [0, 100] * [0, 200] 变成 100*200 矩形 时，缩放系数 是 vec2(1, 3)
+    // 
+    // uVertexScale.zw 物体缩放系数
+    //    例1: aVertexPosition 范围是 [-0.5, 0.5] 变成 200*100 矩形 时，缩放系数 是 vec2(200, 100)
+    //    例2: aVertexPosition 范围是 [0, 100] * [0, 200] 变成 100*200 矩形 时，缩放系数 是 vec2(1, 3)
+    uniform vec4 uVertexScale;
+
     varying vec2 vVertexPosition;
 
     // 返回 coord 到 矩形 最短距离, 负值表示 在里面, 正值表示在外面
@@ -35,7 +45,8 @@ ProgramManager.getInstance().addShader("sdf_rect.fs", `
     }
 
     void main() {
-        float d = sdfRect(vVertexPosition, uExtent);
+        vec2 pos = uVertexScale.zw * vVertexPosition - uVertexScale.xy;
+        float d = sdfRect(pos, uExtent);
         gl_FragColor = vec4(1.0, 0.0, 0.0, 0.5);
     }
     
