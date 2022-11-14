@@ -12,6 +12,7 @@
 
     <!--------------- 各种形状 --------------->
     <script type="text/javascript" src="./shape/border.js"></script>
+    <script type="text/javascript" src="./shape/sdf_border.js"></script>
     <script type="text/javascript" src="./shape/color_material.js"></script>
     <script type="text/javascript" src="./shape/round_rect.js"></script>
     <script type="text/javascript" src="./shape/sdf_round_rect.js"></script>
@@ -28,6 +29,7 @@
     <script type="text/javascript" src="./shader/sdf_pie.fs.js"></script>
     <script type="text/javascript" src="./shader/sdf_arc.fs.js"></script>
     <script type="text/javascript" src="./shader/sdf_round_rect.fs.js"></script>
+    <script type="text/javascript" src="./shader/sdf_border.fs.js"></script>
     <script type="text/javascript" src="./shader/sdf_border_conner.fs.js"></script>
     <script type="text/javascript" src="./shader/sdf_circle.fs.js"></script>
     <script type="text/javascript" src="./shader/sdf_ellipse.fs.js"></script>
@@ -41,19 +43,23 @@
 
             // addSdfCircle(context, 50, 500, 60, 0);
 
-            let borders = [60, 150, 0, 0, 60, 150, 0, 0];
+            let borders = [200, 100, 100, 200, 200, 100, 100, 200];
+            let innerBorders = [10, 50, 30, 60];
+            addSdfBorder(context, 600, 600, borders, innerBorders, 100, 100, 0);
+
+            // let borders = [60, 150, 0, 0, 60, 150, 0, 0];
             // addSdfRoundRect(context, 400, 200, borders, 100, 100, 0);
 
             // let radPie = Math.PI / 6;
-            // let radAxis = Math.PI / 3;
+            // let radAxis = 0; // Math.PI / 3;
             // addSdfPie(context, 200, radPie, radAxis, 100, 100, 0);
 
-            let radius = 200;
-            let halfWidth = 6;
-            let isFlat = true;
-            let radArc = Math.PI / 6;
-            let radAxis = Math.PI / 3;
-            addSdfArc(context, radius, halfWidth, isFlat, radArc, radAxis, 100, 100, 0);
+            // let radius = 200;
+            // let halfWidth = 6;
+            // let isFlat = true;
+            // let radArc = Math.PI / 6;
+            // let radAxis = Math.PI / 3;
+            // addSdfArc(context, radius, halfWidth, isFlat, radArc, radAxis, 100, 100, 0);
 
             // addSdfRect(context, canvas.width, canvas.height, canvas.width / 2, canvas.height / 2, 0);
 
@@ -243,9 +249,27 @@
                 color = [1.0, 0.0, 0.0, 1.0];
             }
 
-            let padding = 3;
-
             let r = SdfRoundRect.create(context.gl, w, h, borders);
+
+            let m = mat4.create();
+            mat4.identity(m);
+            mat4.translate(m, m, [x, y, 0.0]);
+            mat4.rotateZ(m, m, rad);
+            mat4.scale(m, m, [w, h, 1.0]);
+
+            r.mesh.setDrawCount(1);
+            r.mesh.material.setWorldMatrix(m);
+            r.mesh.material.setColor(...color);
+
+            context.addMesh(r);
+        }
+
+        function addSdfBorder(context, w, h, borders, innerBorders, x, y, rad, color) {
+            if (!color) {
+                color = [1.0, 0.0, 0.0, 1.0];
+            }
+
+            let r = SdfBorder.create(context.gl, w, h, borders, innerBorders);
 
             let m = mat4.create();
             mat4.identity(m);

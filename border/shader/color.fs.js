@@ -8,4 +8,4 @@ ProgramManager.getInstance().addShader("color.fs", `
     void main() {
         gl_FragColor = uColor;
     }
-    `);
+`);
