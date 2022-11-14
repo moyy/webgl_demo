@@ -22,24 +22,19 @@ ProgramManager.getInstance().addShader("sdf_arc.fs", `
     // pt 待求点
     // sc 圆弧 边缘处 距离 y轴的 夹角 sin, cos
     // r 半径
-    float sdfArc(vec2 pt, vec2 sc, float r)
+    // w 圆弧 宽度 的 一半
+    float sdfArc(vec2 pt, vec2 sc, float r, float w)
     {
         pt.x = abs(pt.x);
         float k = (sc.y * pt.x > sc.x * pt.y) ? dot(pt, sc) : length(pt);
         // 余弦定理
-        return sqrt(dot(pt, pt) + r * r - 2.0 * r * k);
-    }
+        float d = sqrt(dot(pt, pt) + r * r - 2.0 * r * k);
 
-    // 有宽度 的 圆弧 sdf
-    // w 圆弧 宽度 的 一半
-    float sdfArcWidth(vec2 pt, vec2 sc, float r, float w)
-    {
-        float d = sdfArc(pt, sc, r);
         return d - w;
     }
 
     // 边缘为 平角 的 圆弧
-    float sdfArcFlatWidth(vec2 pt, vec2 sc, float r, float w)
+    float sdfArcFlat(vec2 pt, vec2 sc, float r, float w)
     {
         pt.x = abs(pt.x);
         
@@ -81,20 +76,14 @@ ProgramManager.getInstance().addShader("sdf_arc.fs", `
 
         vec2 pos = scale.zw * vVertexPosition - scale.xy;
         
-        axisSC = vec2(sin(0.0), cos(0.0));
-        // axisSC = vec2(sin(3.14159 / 6.0), cos(3.14159 / 6.0));
-        sc = vec2(sin(3.14159 / 6.0), cos(3.14159 / 6.0));
-
         // 逆过来乘，将 扇形 乘回 到 对称轴 为 y轴 处
         pos = vec2(axisSC.y * pos.x - axisSC.x * pos.y, axisSC.x * pos.x + axisSC.y * pos.y);
         
         float d = 0.0;
-        if (w < 1.0) {
-            d = sdfArc(pos, sc, r);
-        } else if (isFlat < 0.1) {
-            d = sdfArcWidth(pos, sc, r, w);
+        if (isFlat < 0.1) {
+            d = sdfArc(pos, sc, r, w);
         } else {
-            d = sdfArcFlatWidth(pos, sc, r, w);
+            d = sdfArcFlat(pos, sc, r, w);
         }
         
         float a = antialiase(d);
