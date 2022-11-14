@@ -16,6 +16,7 @@
     <script type="text/javascript" src="./shape/round_rect.js"></script>
     <script type="text/javascript" src="./shape/sdf_round_rect.js"></script>
     <script type="text/javascript" src="./shape/sdf_pie.js"></script>
+    <script type="text/javascript" src="./shape/sdf_arc.js"></script>
     <script type="text/javascript" src="./shape/sdf_circle.js"></script>
     <script type="text/javascript" src="./shape/sdf_ellipse.js"></script>
     <script type="text/javascript" src="./shape/sdf_rect.js"></script>
@@ -25,6 +26,7 @@
     <script type="text/javascript" src="./shader/color.vs.js"></script>
     <script type="text/javascript" src="./shader/color.fs.js"></script>
     <script type="text/javascript" src="./shader/sdf_pie.fs.js"></script>
+    <script type="text/javascript" src="./shader/sdf_arc.fs.js"></script>
     <script type="text/javascript" src="./shader/sdf_round_rect.fs.js"></script>
     <script type="text/javascript" src="./shader/sdf_border_conner.fs.js"></script>
     <script type="text/javascript" src="./shader/sdf_circle.fs.js"></script>
@@ -42,9 +44,16 @@
             let borders = [60, 150, 0, 0, 60, 150, 0, 0];
             // addSdfRoundRect(context, 400, 200, borders, 100, 100, 0);
 
-            let radPie = Math.PI / 6;
+            // let radPie = Math.PI / 6;
+            // let radAxis = Math.PI / 3;
+            // addSdfPie(context, 200, radPie, radAxis, 100, 100, 0);
+
+            let radius = 200;
+            let halfWidth = 6;
+            let isFlat = true;
+            let radArc = Math.PI / 6;
             let radAxis = Math.PI / 3;
-            addSdfPie(context, 200, radPie, radAxis, 100, 100, 0);
+            addSdfArc(context, radius, halfWidth, isFlat, radArc, radAxis, 100, 100, 0);
 
             // addSdfRect(context, canvas.width, canvas.height, canvas.width / 2, canvas.height / 2, 0);
 
@@ -182,6 +191,27 @@
 
             r.material.setWorldMatrix(m);
             r.material.setColor(...color);
+
+            context.addMesh(r);
+        }
+
+        function addSdfArc(context, radius, halfWidth, isFlat, radArc, radAxis, x, y, rad, color) {
+            if (!color) {
+                color = [1.0, 0.0, 0.0, 1.0];
+            }
+
+            let r = SdfArc.create(context.gl, radius, halfWidth, isFlat, radArc, radAxis);
+
+            let m = mat4.create();
+            let width = 2 * radius + halfWidth * 2;
+            mat4.identity(m);
+            mat4.translate(m, m, [x, y, 0.0]);
+            mat4.rotateZ(m, m, rad);
+            mat4.scale(m, m, [width, width, 1.0]);
+
+            r.mesh.setDrawCount(1);
+            r.mesh.material.setWorldMatrix(m);
+            r.mesh.material.setColor(...color);
 
             context.addMesh(r);
         }

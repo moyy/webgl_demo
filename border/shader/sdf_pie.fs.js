@@ -19,7 +19,7 @@ ProgramManager.getInstance().addShader("sdf_pie.fs", `
  
     // 扇形 sdf，负数在里面，正数在外面
     // pt 待求点
-    // c 扇形 边缘处 距离 y轴的 夹角 sin, cos
+    // sc 扇形 边缘处 距离 y轴的 夹角 sin, cos
     // r 半径
     // 参考 https://zhuanlan.zhihu.com/p/427587359
     float sdfPie(vec2 p, vec2 sc, float r)
