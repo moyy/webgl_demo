@@ -43,9 +43,9 @@
 
             // addSdfCircle(context, 50, 500, 60, 0);
 
-            let borders = [200, 100, 100, 200, 200, 100, 100, 200];
-            let innerBorders = [10, 50, 30, 60];
-            addSdfBorder(context, 600, 600, borders, innerBorders, 100, 100, 0);
+            let borders = [90, 60, 60, 90, 90, 60, 60, 90];
+            let innerBorders = [10, 20, 10, 20];
+            addSdfBorder(context, 200, 300, borders, innerBorders, 150, 100, 0);
 
             // let borders = [60, 150, 0, 0, 60, 150, 0, 0];
             // addSdfRoundRect(context, 400, 200, borders, 100, 100, 0);
@@ -268,15 +268,16 @@
             if (!color) {
                 color = [1.0, 0.0, 0.0, 1.0];
             }
-
+            
             let r = SdfBorder.create(context.gl, w, h, borders, innerBorders);
 
+            let s = 0.6387;
             let m = mat4.create();
             mat4.identity(m);
             mat4.translate(m, m, [x, y, 0.0]);
             mat4.rotateZ(m, m, rad);
-            mat4.scale(m, m, [w, h, 1.0]);
-
+            mat4.scale(m, m, [w * s, h * s, 1.0]);
+            
             r.mesh.setDrawCount(1);
             r.mesh.material.setWorldMatrix(m);
             r.mesh.material.setColor(...color);

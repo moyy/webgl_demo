@@ -52,19 +52,6 @@ ProgramManager.getInstance().addShader("sdf_border.fs", `
         return 1.0 - smoothstep(-anti, anti, d);
     }
 
-    // 边框
-    float antialiaseBorderRect(vec2 pt, vec2 extent, vec4 trbl) {
-        float r_big = sdfRect(pt, extent);
-        float a_big = antialiase(r_big);
-
-        vec2 center = 0.5 * vec2(trbl.w - trbl.y, trbl.x - trbl.z); 
-        extent = extent - 0.5 * vec2(trbl.y + trbl.w, trbl.x + trbl.z);
-        float r_small = sdfRect(pt - center, extent);
-        float a_small = antialiase(r_small);
-        
-        return a_big - a_small;
-    }
-
     float cross_pt(vec2 v1, vec2 v2) {
         return -(v1.x * v2.y - v1.y * v2.x);
     }
@@ -107,66 +94,44 @@ ProgramManager.getInstance().addShader("sdf_border.fs", `
         return is_ccw(pt, pt0, pt1);
     }
 
-    float antialiase_between(float small_d, float big_d) 
-    {
-        float anti_big_d = 1.0 * fwidth(big_d);
-        float a_big = 1.0 - smoothstep(-anti_big_d, anti_big_d, big_d);
-        float anti_small_d = 1.0 * fwidth(small_d);
-        float a_small = 1.0 - smoothstep(-anti_small_d, anti_small_d, small_d);
-        return a_big - a_small;
+    float antialiase_round_rect(vec2 pt, vec2 extent, vec2 offset1, vec2 offset2, vec2 offset3, vec2 offset4) {
+        
+        float d_rect = sdfRect(pt, extent);
+        float a_rect = antialiase(d_rect);
+
+        vec2 center = vec2(-extent.x + offset1.x, -extent.y + offset1.y); 
+        
+        // mix(begin, end, f)
+
+        if (is_left_top(pt, extent, center)) {
+            float d = sdfEllipse(pt, center, abs(offset1));
+            float a = antialiase(d);
+            return min(a_rect, a);
+        }
+
+        center = vec2(extent.x + offset2.x, -extent.y + offset2.y); 
+        if (is_top_right(pt, extent, center)) {
+            float d = sdfEllipse(pt, center, abs(offset2));
+            float a = antialiase(d);
+            return min(a_rect, a);
+        }
+
+        center = vec2(extent.x + offset3.x, extent.y + offset3.y); 
+        if (is_right_bottom(pt, extent, center)) {
+            float d = sdfEllipse(pt, center, abs(offset3));
+            float a = antialiase(d);
+            return min(a_rect, a);
+        }
+        
+        center = vec2(-extent.x + offset4.x, extent.y + offset4.y); 
+        if (is_bottom_left(pt, extent, center)) {
+            float d = sdfEllipse(pt, center, abs(offset4));
+            float a = antialiase(d);
+            return min(a_rect, a);
+        }
+
+        return a_rect;
     }
-
-    float antialiase_border(vec2 pt, vec2 extent, vec2 offset1, vec2 offset2, vec2 offset3, vec2 offset4, vec4 trbl) {
-		vec2 center = vec2(-extent.x + offset1.x, -extent.y + offset1.y); 
-        vec2 r = pt - center;
-        if (r.x < 0.0 && r.y < 0.0) {
-			vec2 big = abs(offset1);
-			
-			vec2 small = big - trbl.wx;
-			float small_d = sdfEllipse(pt, center, small);
-			
-			float big_d = sdfEllipse(pt, center, big);
-			return antialiase_between(small_d, big_d);
-		}
-
-		center = vec2(extent.x + offset2.x, -extent.y + offset2.y); 
-		r = pt - center;
-        if (r.x > 0.0 && r.y < 0.0) {
-			vec2 big = abs(offset2);
-			vec2 small = big - trbl.yx;
-
-			float small_d = sdfEllipse(pt, center, small);
-			
-			float big_d = sdfEllipse(pt, center, big);
-			return antialiase_between(small_d, big_d);
-		}
-
-		center = vec2(extent.x + offset3.x, extent.y + offset3.y); 
-		r = pt - center;
-        if (r.x > 0.0 && r.y > 0.0) {
-			vec2 big = abs(offset3);
-			
-			vec2 small = big - trbl.yz;
-			float small_d = sdfEllipse(pt, center, small);
-			
-			float big_d = sdfEllipse(pt, center, big);
-			return antialiase_between(small_d, big_d);
-		}
-		
-		center = vec2(-extent.x + offset4.x, extent.y + offset4.y); 
-		r = pt - center;
-        if (r.x < 0.0 && r.y > 0.0) {
-			vec2 big = abs(offset4);
-			
-			vec2 small = big - trbl.wz;
-			float small_d = sdfEllipse(pt, center, small);
-			
-			float big_d = sdfEllipse(pt, center, big);
-			return antialiase_between(small_d, big_d);
-		}
-
-		return antialiaseBorderRect(pt, extent, trbl);
-	}
 
     void main() {
         vec4 scale = clipSdf[0];
@@ -175,22 +140,39 @@ ProgramManager.getInstance().addShader("sdf_border.fs", `
         vec4 top = clipSdf[2];
 		vec4 bottom = clipSdf[3];
 
-		// 左上角
-		vec2 c1 = vec2(max(0.01, top.y), max(0.01, top.x));
-		// 右上角
-		vec2 c2 = vec2(-max(0.01, top.z), max(0.01, top.w));
-		// 右下角
-		vec2 c3 = vec2(-max(0.01, bottom.y), -max(0.01, bottom.x));
-		// 左下角
-		vec2 c4 = vec2(max(0.01, bottom.z), -max(0.01, bottom.w));
-		
-		vec4 param1 = clipSdf[1];
+        vec4 param1 = clipSdf[1];
 		vec2 extent = param1.xy;
-		// 上-右-下-左
-		vec4 trbl = vec4(param1.zw, bottomLeftBorder);
 
-		float a = antialiase_border(pos, extent, c1, c2, c3, c4, trbl);
+        // ============ 外 圆角矩形
+
+		vec2 lt_big = vec2(max(0.01, top.y), max(0.01, top.x));
+		vec2 rt_big = vec2(-max(0.01, top.z), max(0.01, top.w));
+		vec2 rb_big = vec2(-max(0.01, bottom.y), -max(0.01, bottom.x));
+		vec2 lb_big = vec2(max(0.01, bottom.z), -max(0.01, bottom.w));
         
-        gl_FragColor = vec4(uColor.rgb, a * uColor.a);        
+        float a_big = antialiase_round_rect(pos, extent, lt_big, rt_big, rb_big, lb_big);
+
+        // ============ 内 圆角矩形
+
+        // 上-右-下-左
+		float t = param1.z;
+        float r = param1.w;
+        float b = bottomLeftBorder.x;
+        float l = bottomLeftBorder.y;
+
+        pos -= 0.5 * vec2(l - r, t - b);
+        extent -= 0.5 * vec2(l + r, t + b);
+
+        vec2 lt_small = vec2(max(0.01, top.y - l), max(0.01, top.x - t));
+        vec2 rt_small = vec2(-max(0.01, top.z - r), max(0.01, top.w - t));
+        vec2 rb_small = vec2(-max(0.01, bottom.y - r), -max(0.01, bottom.x - b));
+        vec2 lb_small = vec2(max(0.01, bottom.z - l), -max(0.01, bottom.w - b));
+
+        float a_small = antialiase_round_rect(pos, extent, lt_small, rt_small, rb_small, lb_small);
+
+        // ============= 边框 = 外 - 内
+        float a = a_big - a_small;
+
+        gl_FragColor = vec4(uColor.rgb, a * uColor.a);
     }
 `);
