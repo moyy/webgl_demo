@@ -26,12 +26,15 @@ ProgramManager.getInstance().addShader("sdf_pie.fs", `
     {
         p.x = abs(p.x);
 
-        float d1 = length(p) - r;
+        float d_circle = length(p) - r;
         
-        float m = length(p - sc * clamp(dot(p, sc), 0.0, r) );
-        float d2 = m * sign(sc.y * p.x - sc.x * p.y);
+        // pie 为 0 或者 180 需要额外处理
+        if (sc.x < 0.0001) {
+            return abs(sc.y + 1.0) < 0.0001 ? d_circle : sc.y;
+        }
 
-        return max(d1, d2);
+        float d_border = length(p - sc * clamp(dot(p, sc), 0.0, r)) * sign(sc.y * p.x - sc.x * p.y);
+        return max(d_circle, d_border);
     }
 
     // 根据 d, 抗锯齿, 返回 alpha值
@@ -56,12 +59,14 @@ ProgramManager.getInstance().addShader("sdf_pie.fs", `
         vec2 axisSC = pie2.yz;
         vec2 sc = pie3.xy;
         float r = pie3.z;
-
+        
         vec2 pos = scale.zw * vVertexPosition - scale.xy;
         
         // 逆过来乘，将 扇形 乘回 到 对称轴 为 y轴 处
-        pos = vec2(axisSC.y * pos.x - axisSC.x * pos.y, axisSC.x * pos.x + axisSC.y * pos.y);
-
+        // 调整到 PI / 2 = 1.570796325
+        // cos(a- pi/2) = sin(a), sin(a - pi/2) = -cos(a)
+        // 要乘以 旋转矩阵 的 逆
+        pos = vec2(axisSC.x * pos.x - axisSC.y * pos.y, axisSC.y * pos.x + axisSC.x * pos.y);
         float d = sdfPie(pos, sc, r);
         
         float a = antialiase(d);

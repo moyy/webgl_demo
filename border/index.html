@@ -50,9 +50,10 @@
             // let borders = [60, 150, 0, 0, 60, 150, 0, 0];
             // addSdfRoundRect(context, 400, 200, borders, 100, 100, 0);
 
-            // let radPie = Math.PI / 6;
-            // let radAxis = 0; // Math.PI / 3;
-            // addSdfPie(context, 200, radPie, radAxis, 100, 100, 0);
+            let radius = 200;
+            let radPie = 10 * Math.PI / 180;
+            let radAxis = 10 * Math.PI / 180;
+            // addSdfPie(context, radius, radPie, radAxis, 100, 100, 0);
 
             // let radius = 200;
             // let halfWidth = 6;
@@ -225,7 +226,7 @@
         function addSdfPie(context, radius, radPie, radAxis, x, y, rad, color) {
 
             if (!color) {
-                color = [1.0, 0.0, 0.0, 1.0];
+                color = [0.0, 1.0, 0.0, 1.0];
             }
 
             let r = SdfPie.create(context.gl, radius, radPie, radAxis);
@@ -266,12 +267,12 @@
 
         function addSdfBorder(context, w, h, borders, innerBorders, x, y, rad, color) {
             if (!color) {
-                color = [1.0, 0.0, 0.0, 1.0];
+                color = [0.0, 1.0, 0.0, 1.0];
             }
             
             let r = SdfBorder.create(context.gl, w, h, borders, innerBorders);
 
-            let s = 0.6387;
+            let s = 1;
             let m = mat4.create();
             mat4.identity(m);
             mat4.translate(m, m, [x, y, 0.0]);
