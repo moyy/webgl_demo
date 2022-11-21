@@ -11,11 +11,11 @@
     <script type="text/javascript" src="./common/program.js"></script>
 
     <!--------------- 各种形状 --------------->
-    <script type="text/javascript" src="./shape/border.js"></script>
     <script type="text/javascript" src="./shape/sdf_border.js"></script>
+    <script type="text/javascript" src="./shape/sdf_fast_border.js"></script>
     <script type="text/javascript" src="./shape/color_material.js"></script>
-    <script type="text/javascript" src="./shape/round_rect.js"></script>
     <script type="text/javascript" src="./shape/sdf_round_rect.js"></script>
+    <script type="text/javascript" src="./shape/sdf_fast_round_rect.js"></script>
     <script type="text/javascript" src="./shape/sdf_pie.js"></script>
     <script type="text/javascript" src="./shape/sdf_arc.js"></script>
     <script type="text/javascript" src="./shape/sdf_circle.js"></script>
@@ -29,8 +29,9 @@
     <script type="text/javascript" src="./shader/sdf_pie.fs.js"></script>
     <script type="text/javascript" src="./shader/sdf_arc.fs.js"></script>
     <script type="text/javascript" src="./shader/sdf_round_rect.fs.js"></script>
+    <script type="text/javascript" src="./shader/sdf_fast_round_rect.fs.js"></script>
     <script type="text/javascript" src="./shader/sdf_border.fs.js"></script>
-    <script type="text/javascript" src="./shader/sdf_border_conner.fs.js"></script>
+    <script type="text/javascript" src="./shader/sdf_fast_border.fs.js"></script>
     <script type="text/javascript" src="./shader/sdf_circle.fs.js"></script>
     <script type="text/javascript" src="./shader/sdf_ellipse.fs.js"></script>
     <script type="text/javascript" src="./shader/sdf_rect.fs.js"></script>
@@ -43,14 +44,24 @@
 
             // addSdfCircle(context, 50, 500, 60, 0);
 
-            let borders = [90, 60, 60, 90, 90, 60, 60, 90];
-            let innerBorders = [10, 20, 10, 20];
-            addSdfBorder(context, 200, 300, borders, innerBorders, 150, 100, 0);
+            let borders = [30, 30, 30, 30, 30, 30, 30, 30];
+            let innerBorders = [17, 17, 17, 17];
+            // addSdfBorder(context, 97.21154, 165.125, borders, innerBorders, 151.1245, 151.2474, 0);
+            
+            let radius = [30, 30, 60, 30];
+            borderSize = 15;
+            addSdfFastBorder(context, 197.21154, 165.125, radius, borderSize, 101.1245, 202.2474, 0);
 
-            // let borders = [60, 150, 0, 0, 60, 150, 0, 0];
-            // addSdfRoundRect(context, 400, 200, borders, 100, 100, 0);
+            borders = [30, 40, 40, 30, 30, 40, 40, 30];
+            // addSdfRoundRect(context, 131, 71, borders, 100.54548, 100.22415, 0);
+            // addSdfRoundRect(context, 131.215, 71.15, borders, 300.684548, 100.22415, 0);
 
-            let radius = 200;
+            borders = [10, 20, 10, 20];
+            addSdfFastRoundRect(context, 131.245, 71.648, borders, 101.54548, 101.22415, 0);
+            borders = [30, 20, 30, 20];
+            addSdfFastRoundRect(context, 131.215, 71.15, borders, 303.684548, 100.22415, 0);
+
+            radius = 200;
             let radPie = 10 * Math.PI / 180;
             let radAxis = 10 * Math.PI / 180;
             // addSdfPie(context, radius, radPie, radAxis, 100, 100, 0);
@@ -66,12 +77,6 @@
 
             // addSdfEllipse(context, 90, 30, 100, 100, Math.PI / 16);
             // addSdfEllipse(context, 50, 25, 300, 300, -Math.PI / 4);
-
-            // addSdfBorderConner(context, 1, 100, 200, true, true, [60, 100], 320, 570, 0);
-
-            // addSdfBorderConner(context, 1170, 1024, 768, true, true, [1, 1], 1024/2, 768/2, 0);
-
-            // addRoundRect(context, 700, 700, borders, 500, 400, 0);
 
             drawScene(context);
         }
@@ -109,27 +114,6 @@
             mat4.translate(m, m, [x, y, 0.0]);
             mat4.rotateZ(m, m, rad);
             mat4.scale(m, m, [2 * a + padding, 2 * b + padding, 1.0]);
-
-            e.material.setWorldMatrix(m);
-            e.material.setColor(...color);
-
-            context.addMesh(e);
-        }
-
-        function addSdfBorderConner(context, count, w, h, isLeft, isTop, smallWH, x, y, rad, color) {
-            if (!color) {
-                color = [1.0, 0.0, 0.0, 1.0];
-            }
-
-            let padding = 3;
-
-            let e = SdfBorderConner.create(context.gl, count, w, h, isLeft, isTop, smallWH);
-
-            let m = mat4.create();
-            mat4.identity(m);
-            mat4.translate(m, m, [x, y, 0.0]);
-            mat4.rotateZ(m, m, rad);
-            mat4.scale(m, m, [w, h, 1.0]);
 
             e.material.setWorldMatrix(m);
             e.material.setColor(...color);
@@ -244,19 +228,62 @@
             context.addMesh(r);
         }
 
-        function addSdfRoundRect(context, w, h, borders, x, y, rad, color) {
+        function addSdfFastRoundRect(context, w, h, borders, x, y, rad, color) {
 
             if (!color) {
-                color = [1.0, 0.0, 0.0, 1.0];
+                color = [0.0, 1.0, 0.0, 1.0];
             }
 
-            let r = SdfRoundRect.create(context.gl, w, h, borders);
+            let r = SdfFastRoundRect.create(context.gl, w, h, borders);
 
+            let s = 1;
             let m = mat4.create();
             mat4.identity(m);
             mat4.translate(m, m, [x, y, 0.0]);
             mat4.rotateZ(m, m, rad);
-            mat4.scale(m, m, [w, h, 1.0]);
+            mat4.scale(m, m, [s * w, s * h, 1.0]);
+
+            r.mesh.setDrawCount(1);
+            r.mesh.material.setWorldMatrix(m);
+            r.mesh.material.setColor(...color);
+
+            context.addMesh(r);
+        }
+
+        function addSdfRoundRect(context, w, h, borders, x, y, rad, color) {
+
+            if (!color) {
+                color = [0.0, 1.0, 0.0, 1.0];
+            }
+
+            let r = SdfRoundRect.create(context.gl, w, h, borders);
+
+            let s = 1;
+            let m = mat4.create();
+            mat4.identity(m);
+            mat4.translate(m, m, [x, y, 0.0]);
+            mat4.rotateZ(m, m, rad);
+            mat4.scale(m, m, [s * w, s * h, 1.0]);
+
+            r.mesh.setDrawCount(1);
+            r.mesh.material.setWorldMatrix(m);
+            r.mesh.material.setColor(...color);
+
+            context.addMesh(r);
+        }
+        function addSdfFastBorder(context, w, h, radius, borderSize, x, y, rad, color) {
+            if (!color) {
+                color = [0.0, 1.0, 0.0, 1.0];
+            }
+
+            let r = SdfFastBorder.create(context.gl, w, h, radius, borderSize);
+
+            let s = 1;
+            let m = mat4.create();
+            mat4.identity(m);
+            mat4.translate(m, m, [x, y, 0.0]);
+            mat4.rotateZ(m, m, rad);
+            mat4.scale(m, m, [w * s, h * s, 1.0]);
 
             r.mesh.setDrawCount(1);
             r.mesh.material.setWorldMatrix(m);
@@ -269,7 +296,7 @@
             if (!color) {
                 color = [0.0, 1.0, 0.0, 1.0];
             }
-            
+
             let r = SdfBorder.create(context.gl, w, h, borders, innerBorders);
 
             let s = 1;
@@ -278,31 +305,10 @@
             mat4.translate(m, m, [x, y, 0.0]);
             mat4.rotateZ(m, m, rad);
             mat4.scale(m, m, [w * s, h * s, 1.0]);
-            
+
             r.mesh.setDrawCount(1);
             r.mesh.material.setWorldMatrix(m);
             r.mesh.material.setColor(...color);
-
-            context.addMesh(r);
-        }
-
-        function addRoundRect(context, w, h, info, x, y, rad, color) {
-
-            if (!color) {
-                color = [1.0, 0.0, 0.0, 1.0];
-            }
-
-            let r = RoundRect.create(context.gl, w, h, info);
-
-            let m = mat4.create();
-            mat4.identity(m);
-            mat4.translate(m, m, [x, y, 0.0]);
-            mat4.rotateZ(m, m, rad);
-            mat4.scale(m, m, [1, 1, 1.0]);
-
-            r.setDrawCount(100);
-            r.setWorldMatrix(m);
-            r.setColor(...color);
 
             context.addMesh(r);
         }
