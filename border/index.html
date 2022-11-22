@@ -44,22 +44,48 @@
 
             // addSdfCircle(context, 50, 500, 60, 0);
 
-            let borders = [30, 30, 30, 30, 30, 30, 30, 30];
-            let innerBorders = [17, 17, 17, 17];
-            // addSdfBorder(context, 97.21154, 165.125, borders, innerBorders, 151.1245, 151.2474, 0);
+            radius = [0, 0, 50, 50, 50, 50, 50, 50];
+            let borderSizes = [37, 37, 37, 37];
+            let x = 51;
+            let y = 54;
+            let angle = 0;
+            let scale = 0.359;
+            addSdfBorder(context, 367.21154, 297.125, radius, borderSizes, x, y, angle, scale);
             
-            let radius = [30, 30, 60, 30];
-            borderSize = 15;
-            addSdfFastBorder(context, 197.21154, 165.125, radius, borderSize, 101.1245, 202.2474, 0);
+            x = 451;
+            y = 254;
+            angle = 0;
+            scale = 1.0;
+            addSdfBorder(context, 167.21154, 137.125, radius, borderSizes, x, y, angle, scale);
 
-            borders = [30, 40, 40, 30, 30, 40, 40, 30];
-            // addSdfRoundRect(context, 131, 71, borders, 100.54548, 100.22415, 0);
-            // addSdfRoundRect(context, 131.215, 71.15, borders, 300.684548, 100.22415, 0);
+            radius = [30, 30, 20, 30, 20, 20, 30, 30];
+            borderSizes = [17, 10, 8, 17];
+            x = 400;
+            y = 551;
+            angle = 0;
+            scale = 2.0;
+            // addSdfBorder(context, 56.21154, 165.125, radius, borderSizes, x, y, angle, scale);
+            
+            radius = [230, 150, 0, 0, 230, 150, 0, 0];
+            borderSizes = [40, 20, 10, 5];
+            x = 31.1245;
+            y = 11.2474;
+            angle = 0;
+            scale = 4.0;
+            addSdfBorder(context, 197.21154, 265.125, radius, borderSizes, x, y, angle, scale);
 
-            borders = [10, 20, 10, 20];
-            addSdfFastRoundRect(context, 131.245, 71.648, borders, 101.54548, 101.22415, 0);
-            borders = [30, 20, 30, 20];
-            addSdfFastRoundRect(context, 131.215, 71.15, borders, 303.684548, 100.22415, 0);
+            radius = [30, 30, 60, 30];
+            borderSizes = 15;
+            // addSdfFastBorder(context, 197.21154, 165.125, radius, borderSizes, 100.1245, 202.2474, 0);
+
+            borderSizes = [30, 40, 40, 30, 30, 40, 40, 30];
+            // addSdfRoundRect(context, 131, 71, radius, 100.54548, 100.22415, 0);
+            // addSdfRoundRect(context, 131.215, 71.15, radius, 300.684548, 100.22415, 0);
+
+            radius = [10, 20, 10, 20];
+            // addSdfFastRoundRect(context, 131.245, 71.648, radius, 101.54548, 101.22415, 0);
+            radius = [30, 20, 30, 20];
+            // addSdfFastRoundRect(context, 131.215, 71.15, radius, 303.684548, 100.22415, 0);
 
             radius = 200;
             let radPie = 10 * Math.PI / 180;
@@ -165,7 +191,6 @@
         }
 
         function addSdfRect(context, w, h, x, y, rad, color) {
-
             if (!color) {
                 color = [1.0, 0.0, 0.0, 1.0];
             }
@@ -278,7 +303,7 @@
 
             let r = SdfFastBorder.create(context.gl, w, h, radius, borderSize);
 
-            let s = 1;
+            let s = 1.0;
             let m = mat4.create();
             mat4.identity(m);
             mat4.translate(m, m, [x, y, 0.0]);
@@ -292,19 +317,23 @@
             context.addMesh(r);
         }
 
-        function addSdfBorder(context, w, h, borders, innerBorders, x, y, rad, color) {
+        function addSdfBorder(context, w, h, borders, innerBorders, x, y, rad, scale, color) {
+
+            if (!scale) {
+                scale = 1.0;
+            }
+
             if (!color) {
                 color = [0.0, 1.0, 0.0, 1.0];
             }
 
             let r = SdfBorder.create(context.gl, w, h, borders, innerBorders);
 
-            let s = 1;
             let m = mat4.create();
             mat4.identity(m);
             mat4.translate(m, m, [x, y, 0.0]);
             mat4.rotateZ(m, m, rad);
-            mat4.scale(m, m, [w * s, h * s, 1.0]);
+            mat4.scale(m, m, [scale * w, scale * h, 1.0]);
 
             r.mesh.setDrawCount(1);
             r.mesh.material.setWorldMatrix(m);

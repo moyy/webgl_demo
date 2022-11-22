@@ -12,79 +12,76 @@ ProgramManager.getInstance().addShader("sdf_ellipse.fs", `
 
     varying vec2 vVertexPosition;
 
-    // 
-    // TODO 当 a，b 的 值 相差 过大时，会 不准确
-    // 
-    float sdfEllipseSimple(vec2 xy, vec2 ab)
-    {
-        // 求 (1/a, 1/b)
-        vec2 recAB = 1.0 / ab;
+    // 椭圆 sdf 的 精确计算 和 近似模拟 https://iquilezles.org/articles/ellipsedist/
+    // 上篇文章的 shader 实现 https://www.shadertoy.com/view/4lsXDN
+    
+    // 椭圆 sdf 的 另一种 估算法 https://blog.chatfield.io/simple-method-for-distance-to-ellipse/
+    // 上篇文章的 去三角函数 的 版本 https://github.com/0xfaded/ellipse_demo/issues/1
+    // 上篇文章的 shader 实现 https://www.shadertoy.com/view/tttfzr
+    
+    // 点到 椭圆 距离 的 数学推导 和 估算框架 https://www.geometrictools.com/Documentation/DistancePointEllipseEllipsoid.pdf
 
-        // 求 (x/a, y/b) = (x, y) * (1/a, 1/b)
-        vec2 scale = xy * recAB;
+    float sdfEllipse(vec2 p, vec2 center, vec2 ab)
+    {
+        p -= center;
+
+        // symmetry
+        p = abs(p);
         
-        // 椭圆值 f = (x/a)^2 + (y/b)^2 - 1
-        return dot(scale, scale) - 1.0;
+        // initial value
+        vec2 q = ab * (p - ab);
+        vec2 cs = normalize((q.x < q.y) ? vec2(0.01, 1) : vec2(1, 0.01));
+
+        // find root with Newton solver
+        for(int i = 0; i < 5; i++) {
+            vec2 u = ab * vec2(cs.x, cs.y);
+            vec2 v = ab * vec2(-cs.y, cs.x);
+            
+            float a = dot(p-u, v);
+            float c = dot(p-u, u) + dot(v, v);
+            float b = sqrt(c * c - a * a);
+            
+            cs = vec2( cs.x * b - cs.y * a, cs.y * b + cs.x * a ) / c;
+        }
+        
+        // compute final point and distance
+        float d = length(p - ab * cs);
+        
+        // return signed distance
+        return (dot(p/ab, p/ab) > 1.0) ? d : -d;
     }
 
-    // 
-    // TODO 椭圆中心 的 区域，用这个算法 会有 接近 0 的 alpha值
-    // 
-    // 这里用到是标准椭圆方程, x^2/a^2 + y^2/b^2 = 1
-    // 中心在(0, 0), 半长轴为 a, 半短轴为 b
-    // 返回 coord 到 椭圆的 最短距离, 负值表示 在里面, 正值表示在外面
-    // 
-    // 该实现 采用 雅可比 近似 算法, d = f / length(f-梯度)
-    //      在实际 d 为 正负 1 附近时，精度高；
-    //      实际上，抗锯齿 也需要 这样的特性
-    //
-    // 对 椭圆 来说
-    //    f = (x/a)^2 + (y/b)^2 - 1 = dot[(x/a, y/b), (x/a, y/b)] - 1.0
-    //    f-梯度: g = (2x/a^2, 2y/b^2) = 2 * (x/a, y/b) * (1/a, 1/b)
-    //    length(g) = sqrt(dot(g, g))
-    //    1 / length(g) = 1 / sqrt(dot(g, g)) = inversesqrt(dot(g, g))
-    //
-    // 参考 http://www.essentialmath.com/GDC2015/VanVerth_Jim_DrawingAntialiasedEllipse.pdf
-
-    float sdfEllipse(vec2 xy, vec2 ab)
-    {
-        // 求 (1/a, 1/b)
-        vec2 recAB = 1.0 / ab;
-
-        // 求 (x/a, y/b) = (x, y) * (1/a, 1/b)
-        vec2 scale = xy * recAB;
+    // 可以看成 fs 中 计算 统一缩放系数 的 倒数
+    float computeAARange(vec2 position) {
+        // position 变化率，放大2倍，w 0.5
+        vec2 w = fwidth(position);
         
-        // 椭圆值 f = (x/a)^2 + (y/b)^2 - 1
-        float f = dot(scale, scale) - 1.0;
-
-        // 梯度 g = 2.0 * (x/a, y/b) * (1/a, 1/b)
-        vec2 g = 2.0 * scale * recAB;
-        
-        // 1 / length(g) = inversesqrt(dot(g, g))
-
-        return f * inversesqrt(dot(g, g));
+        // sqrt(2)/length(w) = inversesqrt(0.5 * dot(w, w))
+        return inversesqrt(0.5 * dot(w, w));
     }
 
-    // 根据 d, 抗锯齿, 返回 alpha值
-    float antialiase(float d) 
-    {
-        // TODO: 以后 发现 还有锯齿 或者 太模糊 时，可以将 1.0 曝露到 uniform 设置
-        float anti = 1.0 * fwidth(d);
+    // The aa_range is already stored as a reciprocal with uniform scale
+    // so just multiply it, then use that for AA.
+    float distanceAA(float recip_scale, float signed_distance) {
         
-        // smoothstep(-a, a, d) 意思是 根据 d-值 将 [-a, a] 平滑到 [0, 1] 中
-        // d < -a, 全内部, 得到0, 这时期望 alpha = 1.0
-        // d > a, 全外部, 得到1, 这时期望 alpha = 0.0
+        float d = recip_scale * signed_distance;
         
-        return 1.0 - smoothstep(-anti, anti, d);
+        // webrender 原始 公式，太严格，导致 抗锯齿 不大 成功？
+        // d 在 [-0.5, 0.5] 之间，0.5 - d 在 [0, 1]
+        // return clamp(0.5 - d, 0.0, 1.0);
+        
+        // d 在 [-1.0, 1.0] 之间，0.5 * (1.0 + d) 在 [0, 1]
+        return clamp(0.5 * (1.0 - d), 0.0, 1.0);
     }
     
     uniform vec4 uVertexScale;
 
     void main() {
-        vec2 pos = uVertexScale.zw * vVertexPosition - uVertexScale.xy;
-        float d = sdfEllipseSimple(pos, uEllipseAB);
+        vec2 pos = uVertexScale.zw * vVertexPosition;
+        float d = sdfEllipse(pos, uVertexScale.xy, uEllipseAB);
         
-        float a = antialiase(d);
+        float aaRange = computeAARange(pos);
+        float a = distanceAA(aaRange, d);
         
         gl_FragColor = vec4(uColor.rgb, a * uColor.a);
     }

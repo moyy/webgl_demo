@@ -50,16 +50,27 @@ ProgramManager.getInstance().addShader("sdf_arc.fs", `
         return length(max(pt, 0.0)) + min(max(pt.x,pt.y), 0.0);
     }
 
-    // 根据 d, 抗锯齿, 返回 alpha值
-    float antialiase(float d) 
-    {
-        float anti = 1.0 * fwidth(d);
+    // 可以看成 fs 中 计算 统一缩放系数 的 倒数
+    float computeAARange(vec2 position) {
+        // position 变化率，放大2倍，w 0.5
+        vec2 w = fwidth(position);
         
-        // smoothstep(-a, a, d) 意思是 根据 d-值 将 [-a, a] 平滑到 [0, 1] 中
-        // d < -a, 全内部, 得到0, 这时期望 alpha = 1.0
-        // d > a, 全外部, 得到1, 这时期望 alpha = 0.0
+        // sqrt(2)/length(w) = inversesqrt(0.5 * dot(w, w))
+        return inversesqrt(0.5 * dot(w, w));
+    }
+
+    // The aa_range is already stored as a reciprocal with uniform scale
+    // so just multiply it, then use that for AA.
+    float distanceAA(float recip_scale, float signed_distance) {
         
-        return 1.0 - smoothstep(-anti, anti, d);
+        float d = recip_scale * signed_distance;
+        
+        // webrender 原始 公式，太严格，导致 抗锯齿 不大 成功？
+        // d 在 [-0.5, 0.5] 之间，0.5 - d 在 [0, 1]
+        // return clamp(0.5 - d, 0.0, 1.0);
+        
+        // d 在 [-1.0, 1.0] 之间，0.5 * (1.0 + d) 在 [0, 1]
+        return clamp(0.5 * (1.0 - d), 0.0, 1.0);
     }
 
     void main() {
@@ -85,8 +96,10 @@ ProgramManager.getInstance().addShader("sdf_arc.fs", `
         } else {
             d = sdfArcFlat(pos, sc, r, w);
         }
-        
-        float a = antialiase(d);
+
+        float aaRange = computeAARange(pos);
+        float a = distanceAA(aaRange, d);
+
         gl_FragColor = vec4(uColor.rgb, a * uColor.a);
     }
 `);
