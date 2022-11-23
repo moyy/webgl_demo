@@ -12,7 +12,7 @@ ProgramManager.getInstance().addShader("sdf_arc.fs", `
     // 圆弧 SDF 信息
     // [
     //    vec4 (布局中心.x, 布局中心.y, 布局缩放.x, 布局缩放.y),
-    //    vec4 (sin(对称轴-y轴), cos(对称轴-y轴), sin(边缘-对称轴), cos(边缘-对称轴)),
+    //    vec4 (sin(对称轴-x轴), cos(对称轴-x轴), sin(边缘-对称轴), cos(边缘-对称轴)),
     //    vec4 (r-半径, w-圆弧宽度的一半, isFlat-1表示平角圆弧, 0),
     //    vec4 (0, 0, 0, 0),
     // ]
@@ -88,7 +88,10 @@ ProgramManager.getInstance().addShader("sdf_arc.fs", `
         vec2 pos = scale.zw * vVertexPosition - scale.xy;
         
         // 逆过来乘，将 扇形 乘回 到 对称轴 为 y轴 处
-        pos = vec2(axisSC.y * pos.x - axisSC.x * pos.y, axisSC.x * pos.x + axisSC.y * pos.y);
+        // 调整到 PI / 2 = 1.570796325
+        // cos(a- pi/2) = sin(a), sin(a - pi/2) = -cos(a)
+        // 要乘以 旋转矩阵 的 逆
+        pos = vec2(axisSC.x * pos.x - axisSC.y * pos.y, axisSC.y * pos.x + axisSC.x * pos.y);
         
         float d = 0.0;
         if (isFlat < 0.1) {

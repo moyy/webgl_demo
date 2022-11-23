@@ -3,6 +3,8 @@
  */
 class SdfPie {
 
+    // radPie 半角
+    // radAxis 轴和 x-正向 的 角度，正 代表 顺时针
     static create(gl, r, radPie, radAxis) {
         let e = new SdfPie(gl);
 
@@ -63,7 +65,6 @@ class SdfPieMaterial {
 
     setWorldMatrix(m) {
         this.uWorld = m;
-        console.log("this.uWorld = ", this.uWorld);
     }
 
     setColor(r, g, b, a) {
@@ -81,8 +82,6 @@ class SdfPieMaterial {
             scale_y, cosAxis, sinAxis,
             cosPie, sinPie, r
         ]);
-
-        console.log("this.uPieSdf = ", this.uPieSdf);
     }
 
     use(camera) {

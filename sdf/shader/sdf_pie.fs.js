@@ -12,7 +12,7 @@ ProgramManager.getInstance().addShader("sdf_pie.fs", `
     // 扇形 SDF 信息
     // [
     //    vec3 (布局中心.x, 布局中心.y, 布局缩放.x)
-    //    vec3 (布局缩放.y, sin(对称轴-y轴), cos(对称轴-y轴))
+    //    vec3 (布局缩放.y, sin(对称轴-x轴), cos(对称轴-x轴))
     //    vec3 (sin(边缘-对称轴), cos(边缘-对称轴), r)
     // ]
     uniform mat3 uPieSdf;

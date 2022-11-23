@@ -1,7 +1,11 @@
 /**
- * 扇形
+ * 圆弧
  */
 class SdfArc {
+    // halfWidth 弧-半宽
+    // isFlat 弧-端点 是否 平直
+    // radArc 半角
+    // radAxis 轴和 x-正向 的 角度，正 代表 顺时针
     static create(gl, r, halfWidth, isFlat, radArc, radAxis) {
         let e = new SdfArc(gl);
 
@@ -67,7 +71,6 @@ class SdfArcMaterial {
 
     setWorldMatrix(m) {
         this.uWorld = m;
-        console.log("this.uWorld = ", this.uWorld);
     }
 
     setColor(r, g, b, a) {
