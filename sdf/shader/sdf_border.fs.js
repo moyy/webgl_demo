@@ -20,7 +20,39 @@ ProgramManager.getInstance().addShader("sdf_border.fs", `
     // 下-左
     uniform vec2 bottomLeftBorder;
 
+    // https://www.shadertoy.com/view/tttfzr
     float sdfEllipse(vec2 p, vec2 center, vec2 ab)
+    {
+        p -= center;
+
+        // symmetry
+        p = abs(p);
+        
+        // initial value
+        vec2 q = ab * (p - ab);
+        vec2 cs = normalize((q.x < q.y) ? vec2(0.01, 1) : vec2(1, 0.01) );
+
+        // find root with Newton solver
+        for(int i = 0; i < 5; i++) {
+            vec2 u = ab * vec2(cs.x,cs.y);
+            vec2 v = ab * vec2(-cs.y,cs.x);
+            
+            float a = dot(p-u, v);
+            float c = dot(p-u, u) + dot(v, v);
+            float b = sqrt(c * c - a * a);
+            
+            cs = vec2( cs.x * b - cs.y * a, cs.y * b + cs.x * a ) / c;
+        }
+        
+        // compute final point and distance
+        float d = length(p - ab * cs);
+        
+        // return signed distance
+        return (dot(p/ab, p/ab) > 1.0) ? d : -d;
+    }
+    
+    // https://iquilezles.org/articles/ellipsoids/
+    float sdfEllipseSimple(vec2 p, vec2 center, vec2 ab)
     {
         p -= center;
 
@@ -105,25 +137,25 @@ ProgramManager.getInstance().addShader("sdf_border.fs", `
         
         vec2 center = vec2(-extent.x + offset1.x, -extent.y + offset1.y); 
         if (isLeftTop(pt, extent, center)) {
-            float d_lt = sdfEllipse(pt, center, abs(offset1));
+            float d_lt = sdfEllipseSimple(pt, center, abs(offset1));
             return max(d_rect, d_lt);
         }
         
         center = vec2(extent.x + offset2.x, -extent.y + offset2.y); 
         if (isTopRight(pt, extent, center)) {
-            float d_tr = sdfEllipse(pt, center, abs(offset2));
+            float d_tr = sdfEllipseSimple(pt, center, abs(offset2));
             return max(d_rect, d_tr);
         }
         
         center = vec2(extent.x + offset3.x, extent.y + offset3.y); 
         if (isRightBottom(pt, extent, center)) {
-            float d_rb = sdfEllipse(pt, center, abs(offset3));
+            float d_rb = sdfEllipseSimple(pt, center, abs(offset3));
             return max(d_rect, d_rb);
         }
 
         center = vec2(-extent.x + offset4.x, extent.y + offset4.y); 
         if (isBottomLeft(pt, extent, center)) {
-            float d_bl = sdfEllipse(pt, center, abs(offset4));
+            float d_bl = sdfEllipseSimple(pt, center, abs(offset4));
             return max(d_rect, d_bl);
         }
 

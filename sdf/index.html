@@ -107,14 +107,14 @@
             x = 300.245, angleRad = 0, scale = 0.8458;
             addContext(context, shape, x, y, angleRad, scale);
 
-            radius = [120, 90, 0, 0, 100, 70, 0, 0];
+            radius = [90, 120, 0, 0, 80, 170, 0, 0];
             shape = SdfRoundRect.create(gl, 150, 100, radius);
             x = 503.245, angleRad = 0, scale = 0.8458;
             addContext(context, shape, x, y, angleRad, scale);
 
             // ========== 边框：快速 ==========
             radius = [30, 30, 40, 50];
-            borderSize = [20, 20, 20, 30];
+            borderSize = 20;
             shape = SdfFastBorder.create(gl, 150, 100, radius, borderSize);
             x = 701.245, angleRad = 0, scale = 1.0;
             addContext(context, shape, x, y, angleRad, scale);
@@ -123,8 +123,8 @@
             y = 450.12145;
 
             // ========== 边框 ==========
-            radius = [120, 90, 0, 0, 100, 70, 0, 0];
-            borderSize = [20, 20, 5, 30];
+            radius = [80, 120, 0, 0, 70, 130, 0, 0];
+            borderSize = [20, 20, 5, 20];
             shape = SdfBorder.create(gl, 200, 100, radius, borderSize);
             x = 121.245, angleRad = 0, scale = 1.0;
             addContext(context, shape, x, y, angleRad, scale);
