@@ -22,7 +22,6 @@ ProgramManager.getInstance().addShader("sdf_rect.fs", `
     varying vec2 vVertexPosition;
 
     // 返回 coord 到 矩形 最短距离, 负值表示 在里面, 正值表示在外面
-    // 
     float sdfRect(vec2 xy, vec2 wh)
     {
         vec2 d = abs(xy) - wh;

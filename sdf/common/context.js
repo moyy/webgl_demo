@@ -14,23 +14,21 @@ class Context {
         }
 
         context.gl = gl;
-
+        context.canvas = canvas;
+        context.camera = Camera.create();
+        
+        context.setSize(gl);
         ProgramManager.getInstance().setGL(gl);
 
         context.initGLState(context.gl);
-
-        context.vpWidth = canvas.width;
-        context.vpHeight = canvas.height;
-
-        context.camera = Camera.create(context.vpWidth, context.vpHeight);
 
         return context;
     }
 
     constructor() {
         this.gl = null;
-        this.vpWidth = 0;
-        this.vpHeight = 0;
+        
+        this.canvas = null;
 
         this.camera = null;
         this.meshes = [];
@@ -40,13 +38,27 @@ class Context {
         this.meshes.push(mesh);
     }
 
-    draw() {
-        let w = this.vpWidth;
-        let h = this.vpHeight;
+    setSize(gl) {
+        let ratio = window.devicePixelRatio;
+        let w = Math.round(ratio * this.canvas.clientWidth);
+        let h = Math.round(ratio * this.canvas.clientHeight);
 
-        let gl = this.gl;
+        if (w !== this.canvas.width || h !== this.canvas.height) {
+            this.canvas.width = w;
+            this.canvas.height = h;
+            console.warn("========= canvas resize = (" + w + ", " + h + ")");
+        }
 
+        this.camera.setSize(w, h);
+        
         gl.viewport(0, 0, w, h);
+        gl.scissor(0, 0, w, h);
+    }
+
+    draw() {
+        let gl = this.gl;
+        
+        this.setSize(gl);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
         for (let mesh of this.meshes) {

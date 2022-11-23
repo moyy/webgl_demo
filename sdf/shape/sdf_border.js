@@ -1,36 +1,34 @@
 /**
  * 边框
  */
-class SdfFastBorder {
+class SdfBorder {
 
     // TODO 这里 暂时 不处理 半径超过 宽高的情况
-    // radius = [左上, 上右, 右下, 下左];
-    // borderSize = 边框大小
-    static create(gl, w, h, radius, borderSize) {
-        let e = new SdfFastBorder(gl);
+    // borders = [左, 上, 上, 右, 右, 下, 下, 左];
+    // innerBorders = [上, 右，下，左];
+    static create(gl, w, h, borders, innerBorders) {
+        let e = new SdfBorder(gl);
 
         w /= 2;
         h /= 2;
-
+        
         let aVertexPosition = [
-            ...[0, 0],
-            ...[0, 1],
-            ...[1, 1],
-            ...[1, 0],
+            ...[-w, -h],
+            ...[-w, h],
+            ...[w, h],
+            ...[w, -h],
         ];
 
-        let indices = [
-            0, 1, 2,
-            0, 2, 3,
-        ];
+        let indices = [0, 1, 2, 0, 2, 3];
 
-        let program = ProgramManager.getInstance().getProgram("sdf.vs", "sdf_fast_border.fs");
+        let program = ProgramManager.getInstance().getProgram("sdf.vs", "sdf_border.fs");
 
-        let material = SdfFastBorderMaterial.create(gl, program);
+        let material = SdfBorderMaterial.create(gl, program);
         material.setInfo(
             w, h,
-            w, h, 2 * w, 2 * h,
-            radius, borderSize,
+            0, 0, 1, 1,
+            borders,
+            innerBorders,
         );
         e.mesh = Mesh.create(gl);
 
@@ -52,9 +50,9 @@ class SdfFastBorder {
     }
 }
 
-class SdfFastBorderMaterial {
+class SdfBorderMaterial {
     static create(gl, program) {
-        return new SdfFastBorderMaterial(gl, program);
+        return new SdfBorderMaterial(gl, program);
     }
 
     constructor(gl, program) {
@@ -77,20 +75,21 @@ class SdfFastBorderMaterial {
 
     // [half_w, half_h],
     // [offset_x, offset_y],
-    // 上左, 上右, 下右, 下左
-    // 边框大小
+    // [左, 上, 上, 右, 右, 下, 下, 左]
+    // [上, 右, 下, 左]
     setInfo(
         half_w, half_h,
         offset_x, offset_y,
         scale_x, scale_y,
-        radius,
-        borderSize
+        borders,
+        innerBorders
     ) {
+        this.bottomLeftBorder = [innerBorders[2], innerBorders[3]];
+
         this.clipSdf = new Float32Array([
             offset_x, offset_y, scale_x, scale_y,
-            half_w, half_h, 0, 0,
-            ...radius,
-            borderSize, 0, 0, 0,
+            half_w, half_h, innerBorders[0], innerBorders[1],
+            ...borders,
         ]);
     }
 
@@ -111,6 +110,9 @@ class SdfFastBorderMaterial {
 
         let uColor = program.getUniform("uColor");
         gl.uniform4f(uColor, ...this.uColor);
+
+        let bottomLeftBorder = program.getUniform("bottomLeftBorder");
+        gl.uniform2f(bottomLeftBorder, ...this.bottomLeftBorder);
 
         let clipSdf = program.getUniform("clipSdf");
         gl.uniformMatrix4fv(clipSdf, false, this.clipSdf);

@@ -1,31 +1,28 @@
 /**
  * 扇形
  */
-class SdfArc {
+class SdfPie {
 
-    static create(gl, r, halfWidth, isFlat, radArc, radAxis) {
-        let e = new SdfArc(gl);
+    static create(gl, r, radPie, radAxis) {
+        let e = new SdfPie(gl);
 
         let aVertexPosition = [
-            ...[0, 0],
-            ...[0, 1],
-            ...[1, 1],
-            ...[1, 0],
+            ...[-r, -r],
+            ...[-r, r],
+            ...[r, r],
+            ...[r, -r],
         ];
 
-        let indices = [
-            0, 1, 2,
-            0, 2, 3,
-        ];
+        let indices = [0, 1, 2, 0, 2, 3];
 
-        let program = ProgramManager.getInstance().getProgram("sdf.vs", "sdf_arc.fs");
+        let program = ProgramManager.getInstance().getProgram("sdf.vs", "sdf_pie.fs");
 
-        let material = SdfArcMaterial.create(gl, program);
+        let material = SdfPieMaterial.create(gl, program);
         material.setInfo(
-            r, r, 2 * r, 2 * r,
+            0, 0, 1, 1,
             Math.sin(radAxis), Math.cos(radAxis),
-            Math.sin(radArc), Math.cos(radArc),
-            r, halfWidth, isFlat
+            Math.sin(radPie), Math.cos(radPie),
+            r,
         );
         e.mesh = Mesh.create(gl);
 
@@ -47,9 +44,9 @@ class SdfArc {
     }
 }
 
-class SdfArcMaterial {
+class SdfPieMaterial {
     static create(gl, program) {
-        return new SdfArcMaterial(gl, program);
+        return new SdfPieMaterial(gl, program);
     }
 
     constructor(gl, program) {
@@ -58,12 +55,7 @@ class SdfArcMaterial {
 
         this.uColor = [0.0, 0.0, 1.0, 1.0];
 
-        this.uArcSdf = [
-            0.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, 0.0
-        ];
+        this.uPieSdf = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
 
         this.uWorld = mat4.create();
         mat4.identity(this.uWorld);
@@ -82,17 +74,15 @@ class SdfArcMaterial {
         offset_x, offset_y,
         scale_x, scale_y,
         cosAxis, sinAxis,
-        cosArc, sinArc,
-        r, halfWidth, isFlat
-        ) {
-        this.uArcSdf = new Float32Array([
-            offset_x, offset_y, scale_x, scale_y,
-            cosAxis, sinAxis, cosArc, sinArc,
-            r, halfWidth, isFlat ? 1.0 : 0.0, 0,
-            0, 0, 0, 0,
+        cosPie, sinPie,
+        r) {
+        this.uPieSdf = new Float32Array([
+            offset_x, offset_y, scale_x,
+            scale_y, cosAxis, sinAxis,
+            cosPie, sinPie, r
         ]);
 
-        console.log("this.uArcSdf = ", this.uArcSdf);
+        console.log("this.uPieSdf = ", this.uPieSdf);
     }
 
     use(camera) {
@@ -113,7 +103,7 @@ class SdfArcMaterial {
         let uColor = program.getUniform("uColor");
         gl.uniform4f(uColor, ...this.uColor);
 
-        let uArcSdf = program.getUniform("uArcSdf");
-        gl.uniformMatrix4fv(uArcSdf, false, this.uArcSdf);
+        let uPieSdf = program.getUniform("uPieSdf");
+        gl.uniformMatrix3fv(uPieSdf, false, this.uPieSdf);
     }
 }

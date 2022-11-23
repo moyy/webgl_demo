@@ -1,41 +1,29 @@
-/**
- * 圆角矩形
- */
-class SdfRoundRect {
-
-    // TODO 这里 暂时 不处理 半径超过 宽高的情况
-    // borders = [左, 上, 上, 右, 右, 下, 下, 左]
-    static create(gl, w, h, borders) {
-        let e = new SdfRoundRect(gl);
+class SdfRect {
+    static create(gl, w, h) {
 
         w /= 2;
         h /= 2;
-
+        
         let aVertexPosition = [
-            ...[0, 0],
-            ...[0, 1],
-            ...[1, 1],
-            ...[1, 0],
+            ...[-w, -h],
+            ...[-w, h],
+            ...[w, h],
+            ...[w, -h],
         ];
 
-        let indices = [
-            0, 1, 2,
-            0, 2, 3,
-        ];
+        let indices = [0, 1, 2, 0, 2, 3];
+        
+        let e = new SdfRect(gl);
+        
+        let program = ProgramManager.getInstance().getProgram("sdf.vs", "sdf_rect.fs");
 
-        let program = ProgramManager.getInstance().getProgram("sdf.vs", "sdf_round_rect.fs");
+        let material = SdfRectMaterial.create(gl, program);
+        material.setExtent(w, h);
+        material.setVertexScale(0, 0, 1, 1);
 
-        let material = SdfRoundRectMaterial.create(gl, program);
-        material.setInfo(
-            w, h,
-            w, h, 2 * w, 2 * h,
-            borders
-        );
         e.mesh = Mesh.create(gl);
-
         e.mesh.setMaterial(material);
         e.mesh.setIndices(indices);
-
         e.mesh.addAttribute("aVertexPosition", 2, aVertexPosition);
 
         return e;
@@ -51,9 +39,9 @@ class SdfRoundRect {
     }
 }
 
-class SdfRoundRectMaterial {
+class SdfRectMaterial {
     static create(gl, program) {
-        return new SdfRoundRectMaterial(gl, program);
+        return new SdfRectMaterial(gl, program);
     }
 
     constructor(gl, program) {
@@ -61,6 +49,11 @@ class SdfRoundRectMaterial {
         this.program = program;
 
         this.uColor = [0.0, 0.0, 1.0, 1.0];
+
+        // 矩形 宽，高
+        this.uRect = [1.0, 1.0];
+        // obj 放大到 矩阵 的 缩放系数 (x, y, w, h)
+        this.uVertexScale = [0.0, 0.0, 1.0, 1.0];
 
         this.uWorld = mat4.create();
         mat4.identity(this.uWorld);
@@ -74,20 +67,12 @@ class SdfRoundRectMaterial {
         this.uColor = [r, g, b, a];
     }
 
-    // [half_w, half_h],
-    // [offset_x, offset_y],
-    // [左, 上, 上, 右, 右, 下, 下, 左]
-    setInfo(
-        half_w, half_h,
-        offset_x, offset_y,
-        scale_x, scale_y,
-        borders
-    ) {
-        this.uBorderSdf = new Float32Array([
-            offset_x, offset_y, scale_x, scale_y,
-            half_w, half_h, 0, 0,
-            ...borders,
-        ]);
+    setVertexScale(x, y, w, h) {
+        this.uVertexScale = [x, y, w, h];
+    }
+
+    setExtent(half_w, half_h) {
+        this.uExtent = [half_w, half_h];
     }
 
     use(camera) {
@@ -108,7 +93,11 @@ class SdfRoundRectMaterial {
         let uColor = program.getUniform("uColor");
         gl.uniform4f(uColor, ...this.uColor);
 
-        let uBorderSdf = program.getUniform("uBorderSdf");
-        gl.uniformMatrix4fv(uBorderSdf, false, this.uBorderSdf);
+        let uExtent = program.getUniform("uExtent");
+        gl.uniform2f(uExtent, ...this.uExtent);
+
+        // 因为 四边形的坐标用的是 [-0.5, 0.5]，需要扩大 那么多倍 去匹配
+        let uVertexScale = program.getUniform("uVertexScale");
+        gl.uniform4f(uVertexScale, ...this.uVertexScale);
     }
 }

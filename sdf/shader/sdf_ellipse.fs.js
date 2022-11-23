@@ -14,41 +14,19 @@ ProgramManager.getInstance().addShader("sdf_ellipse.fs", `
 
     // 椭圆 sdf 的 精确计算 和 近似模拟 https://iquilezles.org/articles/ellipsedist/
     // 上篇文章的 shader 实现 https://www.shadertoy.com/view/4lsXDN
-    
     // 椭圆 sdf 的 另一种 估算法 https://blog.chatfield.io/simple-method-for-distance-to-ellipse/
     // 上篇文章的 去三角函数 的 版本 https://github.com/0xfaded/ellipse_demo/issues/1
     // 上篇文章的 shader 实现 https://www.shadertoy.com/view/tttfzr
-    
     // 点到 椭圆 距离 的 数学推导 和 估算框架 https://www.geometrictools.com/Documentation/DistancePointEllipseEllipsoid.pdf
-
+    
+    // https://iquilezles.org/articles/ellipsoids/
     float sdfEllipse(vec2 p, vec2 center, vec2 ab)
     {
         p -= center;
 
-        // symmetry
-        p = abs(p);
-        
-        // initial value
-        vec2 q = ab * (p - ab);
-        vec2 cs = normalize((q.x < q.y) ? vec2(0.01, 1) : vec2(1, 0.01));
-
-        // find root with Newton solver
-        for(int i = 0; i < 5; i++) {
-            vec2 u = ab * vec2(cs.x, cs.y);
-            vec2 v = ab * vec2(-cs.y, cs.x);
-            
-            float a = dot(p-u, v);
-            float c = dot(p-u, u) + dot(v, v);
-            float b = sqrt(c * c - a * a);
-            
-            cs = vec2( cs.x * b - cs.y * a, cs.y * b + cs.x * a ) / c;
-        }
-        
-        // compute final point and distance
-        float d = length(p - ab * cs);
-        
-        // return signed distance
-        return (dot(p/ab, p/ab) > 1.0) ? d : -d;
+        float k1 = length(p / ab);
+        float k2 = length(p/(ab * ab));
+        return (k1 - 1.0) * k1 / k2;
     }
 
     // 可以看成 fs 中 计算 统一缩放系数 的 倒数

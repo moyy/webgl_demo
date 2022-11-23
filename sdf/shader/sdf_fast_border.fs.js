@@ -9,7 +9,8 @@ ProgramManager.getInstance().addShader("sdf_fast_border.fs", `
     // 颜色
     uniform vec4 uColor;
 
-    // 四个角都是 圆
+    // 注1：当四个拐角都是 圆 的 时候
+    // 注2：圆半径不得超过 矩形 的 半宽半高
     // [
     //    布局-缩放比例: vec4 (布局中心.xy, 布局缩放.xy)
     //    布局-半宽高：  vec4 (布局半宽, 布局半高, 0, 0)

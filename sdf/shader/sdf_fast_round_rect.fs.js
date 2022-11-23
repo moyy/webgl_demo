@@ -10,6 +10,7 @@ ProgramManager.getInstance().addShader("sdf_fast_round_rect.fs", `
     uniform vec4 uColor;
     
     // 当四个拐角都是 圆 的 时候
+    // 注：圆半径不得超过 矩形 的 半宽半高
     // [
     //    布局-缩放比例: vec4 (布局中心.xy, 布局缩放.xy)
     //    布局-半宽高：  vec4 (布局半宽, 布局半高, 0, 0)
@@ -18,6 +19,12 @@ ProgramManager.getInstance().addShader("sdf_fast_round_rect.fs", `
     // ]
     uniform mat4 uBorderSdf;
  
+    float sdfRect(vec2 p, vec2 extent)
+    {
+        vec2 d = abs(p) - extent;
+        return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);
+    }
+
     // r 半径，上左，上右，下右，下左 r.x，r.y，r.z，r.w
     float sdfFastRoundBox(vec2 p, vec2 extent, vec4 r)
     {
@@ -27,8 +34,7 @@ ProgramManager.getInstance().addShader("sdf_fast_round_rect.fs", `
         r.x = (p.y > 0.0) ? r.y : r.x;
 
         // 求最短距离
-        vec2 q = abs(p) - extent + r.x;
-        return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r.x;
+        return sdfRect(p, extent - r.x) - r.x;
     }
 
     // 可以看成 fs 中 计算 统一缩放系数 的 倒数

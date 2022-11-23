@@ -1,0 +1,169 @@
+<html>
+
+<head>
+
+    <!--------------- 通用 --------------->
+
+    <script type="text/javascript" src="./common/camera.js"></script>
+    <script type="text/javascript" src="./common/context.js"></script>
+    <script type="text/javascript" src="./common/gl-matrix-2.2.1.js"></script>
+    <script type="text/javascript" src="./common/mesh.js"></script>
+    <script type="text/javascript" src="./common/program.js"></script>
+
+    <!--------------- 着色器 --------------->
+    <script type="text/javascript" src="./shader/sdf_arc.fs.js"></script>
+    <script type="text/javascript" src="./shader/sdf_border.fs.js"></script>
+    <script type="text/javascript" src="./shader/sdf_circle.fs.js"></script>
+    <script type="text/javascript" src="./shader/sdf_ellipse.fs.js"></script>
+    <script type="text/javascript" src="./shader/sdf_fast_border.fs.js"></script>
+    <script type="text/javascript" src="./shader/sdf_fast_round_rect.fs.js"></script>
+    <script type="text/javascript" src="./shader/sdf_pie.fs.js"></script>
+    <script type="text/javascript" src="./shader/sdf_rect.fs.js"></script>
+    <script type="text/javascript" src="./shader/sdf_round_rect.fs.js"></script>
+    <script type="text/javascript" src="./shader/sdf.vs.js"></script>
+
+    <!--------------- 各种形状 --------------->
+    <script type="text/javascript" src="./shape/sdf_arc.js"></script>
+    <script type="text/javascript" src="./shape/sdf_border.js"></script>
+    <script type="text/javascript" src="./shape/sdf_circle.js"></script>
+    <script type="text/javascript" src="./shape/sdf_ellipse.js"></script>
+    <script type="text/javascript" src="./shape/sdf_fast_border.js"></script>
+    <script type="text/javascript" src="./shape/sdf_fast_round_rect.js"></script>
+    <script type="text/javascript" src="./shape/sdf_pie.js"></script>
+    <script type="text/javascript" src="./shape/sdf_rect.js"></script>
+    <script type="text/javascript" src="./shape/sdf_round_rect.js"></script>
+
+    <script type="text/javascript">
+        function webGLStart() {
+            let canvas = document.getElementById("sdf");
+            
+            let context = Context.create(canvas);
+            
+            initScene(context);
+            drawScene(context);
+        }
+
+        let frame = 0;
+        let lastTime = 0;
+        function drawScene(context) {
+            requestAnimationFrame(() => {
+                frame++;
+                drawScene(context);
+                let now = performance.now();
+                let tm = now - lastTime;
+                if (tm > 1000) {
+                    console.warn("fps: " + Math.round(frame * 1000 / tm * 10) / 10);
+                    lastTime = now;
+                    frame = 0;
+                }
+            });
+
+            context.draw();
+        }
+
+        function initScene(context) {
+            let gl = context.gl;
+
+            // ========== 第一排 ==========
+            let y = 110.545;
+
+            // ========== 圆 ==========
+            let shape = SdfCircle.create(gl, 50);
+            let x = 100, angleRad = 0.0, scale = 1.0;
+            addContext(context, shape, x, y, angleRad, scale);
+            
+            // ========== 矩形 ==========
+            shape = SdfRect.create(gl, 50, 100);
+            x = 200, angleRad = 0.0, scale = 1.0;
+            addContext(context, shape, x, y, angleRad, scale);
+
+            shape = SdfRect.create(gl, 50, 100);
+            x = 301.245, angleRad = Math.PI / 3, scale = 1.0;
+            addContext(context, shape, x, y, angleRad, scale);
+            
+            // ========== 椭圆 ==========
+            shape = SdfEllipse.create(gl, 100, 20);
+            x = 501.245, angleRad = 0, scale = 1.0;
+            addContext(context, shape, x, y, angleRad, scale);
+
+            shape = SdfEllipse.create(gl, 100, 70);
+            x = 721.245, angleRad = -Math.PI / 3, scale = 1.0;
+            addContext(context, shape, x, y, angleRad, scale);
+
+            // ========== 第二排 ==========
+            y = 280.12145;
+
+            // ========== 圆角矩形：快速 ==========
+            // [上左，上右，下右，下左]
+            let radius = [70, 0, 70, 0];
+            shape = SdfFastRoundRect.create(gl, 150, 150, radius);
+            x = 100.245, angleRad = 0, scale = 0.8458;
+            addContext(context, shape, x, y, angleRad, scale);
+
+            // ========== 圆角矩形 ==========
+            // [左，上，上，右，右，下，下，左]
+            radius = [30, 30, 30, 30, 0, 0, 50, 50];
+            shape = SdfRoundRect.create(gl, 150, 100, radius);
+            x = 300.245, angleRad = 0, scale = 0.8458;
+            addContext(context, shape, x, y, angleRad, scale);
+
+            radius = [120, 90, 0, 0, 100, 70, 0, 0];
+            shape = SdfRoundRect.create(gl, 150, 100, radius);
+            x = 503.245, angleRad = 0, scale = 0.8458;
+            addContext(context, shape, x, y, angleRad, scale);
+
+            // ========== 边框：快速 ==========
+            radius = [30, 30, 40, 50];
+            borderSize = [20, 20, 20, 30];
+            shape = SdfFastBorder.create(gl, 150, 100, radius, borderSize);
+            x = 701.245, angleRad = 0, scale = 1.0;
+            addContext(context, shape, x, y, angleRad, scale);
+            
+            // ========== 第三排 ==========
+            y = 450.12145;
+
+            // ========== 边框 ==========
+            radius = [120, 90, 0, 0, 100, 70, 0, 0];
+            borderSize = [20, 20, 5, 30];
+            shape = SdfBorder.create(gl, 200, 100, radius, borderSize);
+            x = 121.245, angleRad = 0, scale = 1.0;
+            addContext(context, shape, x, y, angleRad, scale);
+
+            // ========== 扇形 ==========
+            let radPie = Math.PI / 3, radPieAxis = 0;
+            shape = SdfPie.create(gl, 100, radPie, radPieAxis);
+            x = 301.245, angleRad = 0, scale = 1.0;
+            addContext(context, shape, x, y, angleRad, scale);
+
+            // ========== 圆弧 ==========
+            let halfWidth = 3, isFlat = false, radArc = Math.PI / 3, radArcAxis = 0;
+            shape = SdfArc.create(gl, 50, halfWidth, isFlat, radArc, radArcAxis);
+            x = 501.245, angleRad = 0, scale = 1.0;
+            addContext(context, shape, x, y, angleRad, scale);
+
+            halfWidth = 6, isFlat = true, radArc = Math.PI / 3, radArcAxis = 0;
+            shape = SdfArc.create(gl, 70, halfWidth, isFlat, radArc, radArcAxis);
+            x = 651.245, angleRad = 0, scale = 0.5;
+            addContext(context, shape, x, y, angleRad, scale);
+        }
+
+        function addContext(context, shape, x, y, angle = 0.0, scale = 1.0, color = [0.0, 1.0, 0.0, 1.0]) {
+            let m = mat4.create();
+            mat4.identity(m);
+            mat4.translate(m, m, [x, y, 0.0]);
+            mat4.rotateZ(m, m, angle);
+            mat4.scale(m, m, [scale, scale, 1.0]);
+
+            shape.mesh.material.setWorldMatrix(m);
+            shape.mesh.material.setColor(...color);
+
+            context.addMesh(shape);
+        }
+    </script>
+</head>
+
+<body onload="webGLStart();" style="background-color: #000;">
+    <canvas id="sdf" style="position:absolute; left:100px; top:100px; width:1024px; height:768;"></canvas>
+</body>
+
+</html>

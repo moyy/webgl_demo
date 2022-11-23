@@ -1,37 +1,24 @@
-/**
- * 扇形
- */
-class SdfPie {
-
-    static create(gl, r, radPie, radAxis) {
-        let e = new SdfPie(gl);
-
+class SdfEllipse {
+    static create(gl, a, b) {
         let aVertexPosition = [
-            ...[0, 0],
-            ...[0, 1],
-            ...[1, 1],
-            ...[1, 0],
+            ...[-a, -b],
+            ...[-a, b],
+            ...[a, b],
+            ...[a, -b],
         ];
 
-        let indices = [
-            0, 1, 2,
-            0, 2, 3,
-        ];
+        let indices = [0, 1, 2, 0, 2, 3];
+        
+        let e = new SdfEllipse(gl);
+        let program = ProgramManager.getInstance().getProgram("sdf.vs", "sdf_ellipse.fs");
 
-        let program = ProgramManager.getInstance().getProgram("sdf.vs", "sdf_pie.fs");
+        let material = SdfEllipseMaterial.create(gl, program);
+        material.setEllipseAB(a, b);
+        material.setVertexScale(0, 0, 1, 1);
 
-        let material = SdfPieMaterial.create(gl, program);
-        material.setInfo(
-            r, r, 2 * r, 2 * r,
-            Math.sin(radAxis), Math.cos(radAxis),
-            Math.sin(radPie), Math.cos(radPie),
-            r,
-        );
         e.mesh = Mesh.create(gl);
-
         e.mesh.setMaterial(material);
         e.mesh.setIndices(indices);
-
         e.mesh.addAttribute("aVertexPosition", 2, aVertexPosition);
 
         return e;
@@ -47,9 +34,9 @@ class SdfPie {
     }
 }
 
-class SdfPieMaterial {
+class SdfEllipseMaterial {
     static create(gl, program) {
-        return new SdfPieMaterial(gl, program);
+        return new SdfEllipseMaterial(gl, program);
     }
 
     constructor(gl, program) {
@@ -58,7 +45,10 @@ class SdfPieMaterial {
 
         this.uColor = [0.0, 0.0, 1.0, 1.0];
 
-        this.uPieSdf = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+        // 椭圆 半长轴，半短轴
+        this.uEllipseAB = [1.0, 1.0];
+        // obj 放大到 矩阵 的 缩放系数 (x, y, w, h)
+        this.uVertexScale = [0.0, 0.0, 1.0, 1.0];
 
         this.uWorld = mat4.create();
         mat4.identity(this.uWorld);
@@ -66,26 +56,18 @@ class SdfPieMaterial {
 
     setWorldMatrix(m) {
         this.uWorld = m;
-        console.log("this.uWorld = ", this.uWorld);
     }
 
     setColor(r, g, b, a) {
         this.uColor = [r, g, b, a];
     }
 
-    setInfo(
-        offset_x, offset_y,
-        scale_x, scale_y,
-        cosAxis, sinAxis,
-        cosPie, sinPie,
-        r) {
-        this.uPieSdf = new Float32Array([
-            offset_x, offset_y, scale_x,
-            scale_y, cosAxis, sinAxis,
-            cosPie, sinPie, r
-        ]);
+    setVertexScale(x, y, w, h) {
+        this.uVertexScale = [x, y, w, h];
+    }
 
-        console.log("this.uPieSdf = ", this.uPieSdf);
+    setEllipseAB(a, b) {
+        this.uEllipseAB = [a, b];
     }
 
     use(camera) {
@@ -106,7 +88,11 @@ class SdfPieMaterial {
         let uColor = program.getUniform("uColor");
         gl.uniform4f(uColor, ...this.uColor);
 
-        let uPieSdf = program.getUniform("uPieSdf");
-        gl.uniformMatrix3fv(uPieSdf, false, this.uPieSdf);
+        let uEllipseAB = program.getUniform("uEllipseAB");
+        gl.uniform2f(uEllipseAB, ...this.uEllipseAB);
+
+        // 因为 四边形的坐标用的是 [-0.5, 0.5]，需要扩大 那么多倍 去匹配
+        let uVertexScale = program.getUniform("uVertexScale");
+        gl.uniform4f(uVertexScale, ...this.uVertexScale);
     }
 }
