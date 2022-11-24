@@ -1,4 +1,5 @@
 - [2D SDF](#2d-sdf)
+  - [0. ShaderToy Demo](#0-shadertoy-demo)
   - [1. 概念](#1-概念)
   - [2. 基本图形](#2-基本图形)
   - [3. 变换](#3-变换)
@@ -18,6 +19,25 @@
 
 `Sign Distance Field`（有向）符号 距离 场
 
+内负外正，点 到 曲线 的 最短 距离；
+
+想象 以 该点 为中心的圆 逐渐放大，和 已有图形 第一次相切 的 那个圆的 半径，就是 该点的 sdf 的绝对值； 
+
+例子：（在某个点 点击 鼠标） https://www.shadertoy.com/view/4sS3zz
+
+![](./imgs/1.jpg)
+
+## 0. ShaderToy Demo
+
++ [fs：基本操作](https://www.shadertoy.com/view/ddfSR2)
++ [SDF: 基本形状](https://www.shadertoy.com/view/dsfSz2)
+  - 圆，半平面
+  - 坐标变换
++ [组合子](https://www.shadertoy.com/view/dsfXz2)
++ `TODO` 更多形状：Segment, Rect, Ellipse, Round-Box
++ `TODO` 应用：抗锯齿，阴影，描边，辉光
++ `TODO` 渐变
+
 ## 1. 概念
 
 曲线 的 隐函数 表示 f(x, y) = 0；
@@ -32,7 +52,7 @@
 + sdf < 0, 里
 + sdf > 0, 外
 
-![](./imgs/1.jpg)
+![](./imgs/2.jpg)
 
 ## 2. 基本图形
 
@@ -59,7 +79,7 @@
 |并集 Union|A ∪ B|min(A, B)|
 |交集 Intersection|A ∩ B|max(A, B)|
 |差集 Difference|A - B = A ∩ ~B|max(A, -B)|
-|平滑并集 Intersection|A ∩ B|[smin(A, B, k)](https://zhuanlan.zhihu.com/p/246501223)|
+|平滑并集 Union|A ∪ B|[smin(A, B, k)](https://zhuanlan.zhihu.com/p/246501223)|
 |平滑交集 Intersection|A ∩ B|smax(A, B, k) = -smin(-A, -B, k)|
 |平滑差集 Difference|A - B = A ∩ ~B|smax(A, -B)|
 |混合Mix|(A, B, t)|A*(1-t) + t*B|
