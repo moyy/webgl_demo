@@ -21,6 +21,8 @@
     <script type="text/javascript" src="./shader/sdf_rect.fs.js"></script>
     <script type="text/javascript" src="./shader/sdf_round_rect.fs.js"></script>
     <script type="text/javascript" src="./shader/sdf.vs.js"></script>
+    <script type="text/javascript" src="./shader/glyphy.vs.js"></script>
+    <script type="text/javascript" src="./shader/glyphy.fs.js"></script>
 
     <!--------------- 各种形状 --------------->
     <script type="text/javascript" src="./shape/sdf_arc.js"></script>
@@ -32,19 +34,21 @@
     <script type="text/javascript" src="./shape/sdf_pie.js"></script>
     <script type="text/javascript" src="./shape/sdf_rect.js"></script>
     <script type="text/javascript" src="./shape/sdf_round_rect.js"></script>
+    <script type="text/javascript" src="./shape/glyphy.js"></script>
 
     <script type="text/javascript">
         function webGLStart() {
             let canvas = document.getElementById("sdf");
-            
+
             let context = Context.create(canvas);
-            
+
             initScene(context);
             drawScene(context);
         }
 
         let frame = 0;
         let lastTime = 0;
+
         function drawScene(context) {
             requestAnimationFrame(() => {
                 frame++;
@@ -67,20 +71,28 @@
             // ========== 第一排 ==========
             let y = 110.545;
 
-            // ========== 圆 ==========
-            let shape = SdfCircle.create(gl, 50);
-            let x = 100, angleRad = 0.0, scale = 1.0;
-            addContext(context, shape, x, y, angleRad, scale);
+            // ========== 文字 A ==========
+            let shape = Glyphy.create(gl);
+            let x = 50,
+                angleRad = 0.0,
+                scale = 20.0,
+                color = [0.0, 0.0, 0.0, 1.0];
+            addContext(context, shape, x, y, angleRad, scale, color);
             
+            // ========== 圆 ==========
+            shape = SdfCircle.create(gl, 50);
+            x = 130, angleRad = 0.0, scale = 1.0;
+            addContext(context, shape, x, y, angleRad, scale);
+
             // ========== 矩形 ==========
             shape = SdfRect.create(gl, 50, 100);
-            x = 200, angleRad = 0.0, scale = 1.0;
+            x = 216, angleRad = 0.0, scale = 1.0;
             addContext(context, shape, x, y, angleRad, scale);
 
             shape = SdfRect.create(gl, 50, 100);
-            x = 301.245, angleRad = Math.PI / 3, scale = 1.0;
+            x = 321.245, angleRad = Math.PI / 3, scale = 1.0;
             addContext(context, shape, x, y, angleRad, scale);
-            
+
             // ========== 椭圆 ==========
             shape = SdfEllipse.create(gl, 100, 20);
             x = 501.245, angleRad = 0, scale = 1.0;
@@ -118,7 +130,7 @@
             shape = SdfFastBorder.create(gl, 150, 100, radius, borderSize);
             x = 701.245, angleRad = 0, scale = 1.0;
             addContext(context, shape, x, y, angleRad, scale);
-            
+
             // ========== 第三排 ==========
             y = 450.12145;
 
@@ -130,13 +142,17 @@
             addContext(context, shape, x, y, angleRad, scale);
 
             // ========== 扇形 ==========
-            let radPie = Math.PI / 3, radPieAxis = 0;
+            let radPie = Math.PI / 3,
+                radPieAxis = 0;
             shape = SdfPie.create(gl, 100, radPie, radPieAxis);
             x = 301.245, angleRad = 0, scale = 1.0;
             addContext(context, shape, x, y, angleRad, scale);
 
             // ========== 圆弧 ==========
-            let halfWidth = 3, isFlat = false, radArc = Math.PI / 3, radArcAxis = 0;
+            let halfWidth = 3,
+                isFlat = false,
+                radArc = Math.PI / 3,
+                radArcAxis = 0;
             shape = SdfArc.create(gl, 50, halfWidth, isFlat, radArc, radArcAxis);
             x = 501.245, angleRad = 0, scale = 1.0;
             addContext(context, shape, x, y, angleRad, scale);

@@ -1,6 +1,6 @@
 ProgramManager.getInstance().addShader("sdf_arc.fs", `
 
-    #extension GL_OES_standard_derivatives : require
+    #extension GL_OES_standard_derivatives : enable
 
     precision highp float;
 
