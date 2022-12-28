@@ -68,17 +68,80 @@
         function initScene(context) {
             let gl = context.gl;
 
-            // ========== 第一排 ==========
-            let y = 110.545;
+            // ========== 第1排 ==========
+            let y = 50.545;
 
-            // ========== 文字 A ==========
+            // ========== 文字 我 ==========
+            
+            // 10 * 10
             let shape = Glyphy.create(gl);
             let x = 50,
+                angleRad = 0.0,
+                scale = 10.0,
+                color = [0.0, 0.0, 0.0, 1.0];
+            addContext(context, shape, x, y, angleRad, scale, color);
+            
+            // 12 * 12
+            shape = Glyphy.create(gl);
+            x += 20,
+                angleRad = 0.0,
+                scale = 12.0,
+                color = [0.0, 0.0, 0.0, 1.0];
+            addContext(context, shape, x, y, angleRad, scale, color);
+
+            // 14 * 14
+            shape = Glyphy.create(gl);
+            x += 20,
+                angleRad = 0.0,
+                scale = 14.0,
+                color = [0.0, 0.0, 0.0, 1.0];
+            addContext(context, shape, x, y, angleRad, scale, color);
+            
+            // 16 * 16
+            shape = Glyphy.create(gl);
+            x += 20,
+                angleRad = 0.0,
+                scale = 16.0,
+                color = [0.0, 0.0, 0.0, 1.0];
+            addContext(context, shape, x, y, angleRad, scale, color);
+
+            shape = Glyphy.create(gl);
+            x += 20,
+                angleRad = 0.0,
+                scale = 18.0,
+                color = [0.0, 0.0, 0.0, 1.0];
+            addContext(context, shape, x, y, angleRad, scale, color);
+
+            shape = Glyphy.create(gl);
+            x += 30,
                 angleRad = 0.0,
                 scale = 20.0,
                 color = [0.0, 0.0, 0.0, 1.0];
             addContext(context, shape, x, y, angleRad, scale, color);
-            
+
+            shape = Glyphy.create(gl);
+            x += 30,
+                angleRad = 0.0,
+                scale = 30.0,
+                color = [0.0, 0.0, 0.0, 1.0];
+            addContext(context, shape, x, y, angleRad, scale, color);
+
+            shape = Glyphy.create(gl);
+            x += 50,
+                angleRad = 0.0,
+                scale = 50.0,
+                color = [0.0, 0.0, 0.0, 1.0];
+            addContext(context, shape, x, y, angleRad, scale, color);
+
+            x += 30,
+                angleRad = 0.0,
+                scale = 100.0,
+                color = [0.0, 0.0, 0.0, 1.0];
+            addContext(context, shape, x, y, angleRad, scale, color);
+
+            // ========== 第2排 ==========
+            y = 210.545;
+
             // ========== 圆 ==========
             shape = SdfCircle.create(gl, 50);
             x = 130, angleRad = 0.0, scale = 1.0;
@@ -102,8 +165,8 @@
             x = 721.245, angleRad = -Math.PI / 3, scale = 1.0;
             addContext(context, shape, x, y, angleRad, scale);
 
-            // ========== 第二排 ==========
-            y = 280.12145;
+            // ========== 第3排 ==========
+            y = 380.12145;
 
             // ========== 圆角矩形：快速 ==========
             // [上左，上右，下右，下左]
@@ -131,8 +194,8 @@
             x = 701.245, angleRad = 0, scale = 1.0;
             addContext(context, shape, x, y, angleRad, scale);
 
-            // ========== 第三排 ==========
-            y = 450.12145;
+            // ========== 第4排 ==========
+            y = 550.12145;
 
             // ========== 边框 ==========
             radius = [80, 120, 0, 0, 70, 130, 0, 0];
