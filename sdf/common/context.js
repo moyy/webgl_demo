@@ -3,7 +3,8 @@ class Context {
         let context = new Context();
 
         let gl = canvas.getContext("webgl", {
-            antialias: false
+            antialias: false,
+            alpha: false,
         });
         if (!gl) {
             throw new Error("Could not initialise WebGL");
@@ -59,6 +60,7 @@ class Context {
         let gl = this.gl;
         
         this.setSize(gl);
+        gl.clearDepth(1.0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
         for (let mesh of this.meshes) {
@@ -69,7 +71,7 @@ class Context {
     initGLState(gl) {
         gl.clearColor(1.0, 1.0, 1.0, 1.0);
         
-        gl.disable(gl.DEPTH_TEST);
+        gl.enable(gl.DEPTH_TEST);
         
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);

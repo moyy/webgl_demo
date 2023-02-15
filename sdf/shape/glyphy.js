@@ -13,7 +13,7 @@ class Glyphy {
             1.080062, 1.229965, 49.000000, 48.000000,
             -0.081039, 0.068864, 48.000000, 49.000000,
             1.080062, 1.229965, 49.000000, 48.000000,
-            1.080062, 0.068864, 49.000000, 49.000000,
+            1.080062, 0.068864, 49.000000, 49.000000
         ];
 
         let indices = [0, 1, 2, 3, 4, 5];
@@ -50,8 +50,8 @@ class GlyphyMaterial {
         this.gl = gl;
         this.program = program;
 
-        this.tex_w = 2048;
-        this.tex_h = 1024;
+        this.tex_w = 512;
+        this.tex_h = 512;
         this.tex = initTexture(gl, this.tex_w, this.tex_h);
 
         this.uColor = [0.0, 0.0, 0.0, 1.0];

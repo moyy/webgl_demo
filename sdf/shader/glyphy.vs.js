@@ -34,8 +34,8 @@ ProgramManager.getInstance().addShader("glyphy.vs", `
     }
 
     void main() {
-        v_glyph = glyph_vertex_transcode (a_glyph_vertex.zw);
-
+        v_glyph = glyph_vertex_transcode(a_glyph_vertex.zw);
+        
         gl_Position = uProj * uView * uWorld * vec4(a_glyph_vertex.xy, 0.0, 1.0);
     }
 `);

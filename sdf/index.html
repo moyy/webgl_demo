@@ -69,139 +69,69 @@
             let gl = context.gl;
 
             // ========== 第1排 ==========
-            let y = 50.545;
+            let y = 50;
 
-            // ========== 文字 我 ==========
+            // ========== 文字 ==========
 
             let shape = Glyphy.create(gl);
             let x = 50,
                 angleRad = 0.0,
-                scale = 25,
-                color = [0.0, 0.0, 0.0, 1.0];
-            addContext(context, shape, x, y, angleRad, scale, color);
-
-            // 9: 12 * 11
-            shape = Glyphy.create(gl);
-            x += 40,
-                angleRad = 0.0,
-                scale = 28,
-                color = [0.0, 0.0, 0.0, 1.0];
-            addContext(context, shape, x, y, angleRad, scale, color);
-
-            // 10: 14 * 13
-            shape = Glyphy.create(gl);
-            x += 40,
-                angleRad = 0.0,
-                scale = 49,
-                color = [0.0, 0.0, 0.0, 1.0];
-            addContext(context, shape, x, y, angleRad, scale, color);
-
-
-             // 10: 14 * 13
-             shape = Glyphy.create(gl);
-            x += 100,
-                angleRad = 0.0,
-                scale = 100,
-                color = [0.0, 0.0, 0.0, 1.0];
-            addContext(context, shape, x, y, angleRad, scale, color);
-
-            // ========== 第2排 ==========
-            y = 200.545;
-
-            shape = Glyphy.create(gl);
-            x = 50,
-                angleRad = 0.0,
-                scale = 10,
-                color = [0.0, 0.0, 0.0, 1.0];
-            addContext(context, shape, x, y, angleRad, scale, color);
-
-            shape = Glyphy.create(gl);
-            x += 40,
-                angleRad = 0.0,
-                scale = 11,
-                color = [0.0, 0.0, 0.0, 1.0];
-            addContext(context, shape, x, y, angleRad, scale, color);
-
-            shape = Glyphy.create(gl);
-            x += 40,
-                angleRad = 0.0,
                 scale = 12,
                 color = [0.0, 0.0, 0.0, 1.0];
             addContext(context, shape, x, y, angleRad, scale, color);
-
+    
             shape = Glyphy.create(gl);
-            x += 40,
-                angleRad = 0.0,
-                scale = 13,
-                color = [0.0, 0.0, 0.0, 1.0];
-            addContext(context, shape, x, y, angleRad, scale, color);
-
-            shape = Glyphy.create(gl);
-            x += 40,
+            x += 35,
                 angleRad = 0.0,
                 scale = 14,
                 color = [0.0, 0.0, 0.0, 1.0];
             addContext(context, shape, x, y, angleRad, scale, color);
 
             shape = Glyphy.create(gl);
-            x += 80,
-                angleRad = 0.0,
-                scale = 15,
-                color = [0.0, 0.0, 0.0, 1.0];
-            addContext(context, shape, x, y, angleRad, scale, color);
-
-            shape = Glyphy.create(gl);
-            x += 80,
+            x += 35,
                 angleRad = 0.0,
                 scale = 16,
                 color = [0.0, 0.0, 0.0, 1.0];
             addContext(context, shape, x, y, angleRad, scale, color);
 
             shape = Glyphy.create(gl);
-            x += 80,
-                angleRad = 0.0,
-                scale = 17,
-                color = [0.0, 0.0, 0.0, 1.0];
-            addContext(context, shape, x, y, angleRad, scale, color);
-
-            shape = Glyphy.create(gl);
-            x += 80,
+            x += 35,
                 angleRad = 0.0,
                 scale = 18,
                 color = [0.0, 0.0, 0.0, 1.0];
             addContext(context, shape, x, y, angleRad, scale, color);
 
             shape = Glyphy.create(gl);
-            x += 80,
-                angleRad = 0.0,
-                scale = 19,
-                color = [0.0, 0.0, 0.0, 1.0];
-            addContext(context, shape, x, y, angleRad, scale, color);
-
-            shape = Glyphy.create(gl);
-            x += 80,
+            x += 35,
                 angleRad = 0.0,
                 scale = 20,
                 color = [0.0, 0.0, 0.0, 1.0];
             addContext(context, shape, x, y, angleRad, scale, color);
 
             shape = Glyphy.create(gl);
-            x += 80,
+            x += 35,
                 angleRad = 0.0,
-                scale = 21,
+                scale = 24,
                 color = [0.0, 0.0, 0.0, 1.0];
             addContext(context, shape, x, y, angleRad, scale, color);
 
             shape = Glyphy.create(gl);
-            x += 80,
+            x += 50,
                 angleRad = 0.0,
-                scale = 22,
+                scale = 50,
                 color = [0.0, 0.0, 0.0, 1.0];
             addContext(context, shape, x, y, angleRad, scale, color);
 
-            // ========== 第3排 ==========
-            y = 250.545;
+            shape = Glyphy.create(gl);
+            x += 70,
+                angleRad = 0.0,
+                scale = 100,
+                color = [0.0, 0.0, 0.0, 1.0];
+            addContext(context, shape, x, y, angleRad, scale, color);
 
+            // ========== 第2排 ==========
+            y += 180.545;
+            
             // ========== 圆 ==========
             shape = SdfCircle.create(gl, 50);
             x = 130, angleRad = 0.0, scale = 1.0;
@@ -226,7 +156,7 @@
             addContext(context, shape, x, y, angleRad, scale);
 
             // ========== 第3排 ==========
-            y = 420.12145;
+            y += 180.110;
 
             // ========== 圆角矩形：快速 ==========
             // [上左，上右，下右，下左]
@@ -255,7 +185,7 @@
             addContext(context, shape, x, y, angleRad, scale);
 
             // ========== 第4排 ==========
-            y = 580.12145;
+            y += 150.110;
 
             // ========== 边框 ==========
             radius = [80, 120, 0, 0, 70, 130, 0, 0];
@@ -305,7 +235,7 @@
 </head>
 
 <body onload="webGLStart();" style="background-color: #000;">
-    <canvas id="sdf" style="position:absolute; left:100px; top:100px; width:1024px; height:768;"></canvas>
+    <canvas id="sdf" style="position:absolute; left:100px; top:30px; width:768px; height:600px;"></canvas>
 </body>
 
 </html>

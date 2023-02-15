@@ -302,6 +302,7 @@ ProgramManager.getInstance().addShader("glyphy.fs", `
 			}
 
 			vec4 rgba = glyphy_texture1D_func(arc_list.offset + i, tex, atlas_info, atlas_pos).rgba;
+
 			endpoint = glyphy_arc_endpoint_decode(rgba, nominal_size);
 			
 			glyphy_arc_t a = glyphy_arc_t(pp, endpoint.p, endpoint.d);
@@ -321,7 +322,6 @@ ProgramManager.getInstance().addShader("glyphy.fs", `
 					side = sdist <= 0. ? -1.0 : +1.0;
 				}
 			} else {
-				// 取 交集 
 				float udist = min(distance(p, a.p0), distance(p, a.p1));
 
 				if(udist < min_dist - GLYPHY_EPSILON) {
@@ -329,10 +329,11 @@ ProgramManager.getInstance().addShader("glyphy.fs", `
 					side = 0.0; /* unsure */
 					closest_arc = a;
 				} else if(side == 0.0 && udist - min_dist <= GLYPHY_EPSILON) {
-					/* If this new distance is the same as the current minimum,
-					* compare extended distances.  Take the sign from the arc
-					* with larger extended distance. 
-					*/
+					/** 
+					 * If this new distance is the same as the current minimum,
+					 * compare extended distances.  Take the sign from the arc
+					 * with larger extended distance. 
+					 */
 
 					float old_ext_dist = glyphy_arc_extended_dist(closest_arc, p);
 					float new_ext_dist = glyphy_arc_extended_dist(a, p);
@@ -340,7 +341,7 @@ ProgramManager.getInstance().addShader("glyphy.fs", `
 					float ext_dist = abs(new_ext_dist) <= abs(old_ext_dist) ? old_ext_dist : new_ext_dist;
 
 					#ifdef GLYPHY_SDF_PSEUDO_DISTANCE
-						/* For emboldening and stuff: */
+						// For emboldening and stuff:
 						min_dist = abs(ext_dist);
 					#endif
 		
@@ -446,19 +447,23 @@ ProgramManager.getInstance().addShader("glyphy.fs", `
 	}
 
 	// 抗锯齿 1像素 
-	// d 在 [-threshold, threshold] 返回 [0.0, 1.0] 
-	float antialias(float d) {
+	// d 在 [a, b] 返回 [0.0, 1.0] 
+	float antialias(float d, float scale) {
+		float a = -0.5;
+		float b = -a;
 		
-		float threshold = 0.5;
-
-		// 垂直 和 水平方向，截断 
-		float scale = 1.0;
-		if (abs(dFdx(d)) < scale * GLYPHY_EPSILON || abs(dFdy(d)) < scale * GLYPHY_EPSILON) {
-			threshold = 0.1;
+		if (scale < 1.0) {
+			d /= scale;
 		}
 
-		d = 0.5 - d / (2.0 * threshold);
-		return clamp(d, 0.0, 1.0);
+		if (abs(dFdx(d)) < 0.06 || abs(dFdy(d)) < 0.06) {
+			a = -0.15;
+			b = -a;
+		}
+
+		float r = (-d - a) / (b - a);
+
+		return clamp(r, 0.0, 1.0);
 	}
 
 	void main() {
@@ -466,16 +471,72 @@ ProgramManager.getInstance().addShader("glyphy.fs", `
 
 		// 解码 
 		glyph_info_t gi = glyph_info_decode(v_glyph.zw);
-
+	
 		// 重点：计算 SDF 
 		float gsdist = glyphy_sdf(p, gi.nominal_size, u_atlas_tex, u_atlas_info, gi.atlas_pos);
 
+		// 默认 u_boldness = 0.0 
+		gsdist -= u_boldness;
+	
 		// 均匀缩放 
-		float scale = length(fwidth(p)) * SQRT2_2;
+		float scale = SQRT2 / length(fwidth(p));
 
-		float sdist = gsdist / scale;
+		// 默认 u_contrast = 1.0 
+		float sdist = u_contrast * gsdist * scale;
 
-		gl_FragColor = vec4(0.0, 0.0, 0.0, antialias(sdist));
+		vec4 color = vec4(0.0, 0.0, 0.0, 1.0);
+
+		// 默认 u_debug = false 
+		if (!u_debug) {
+			// 默认 u_outline = false 
+			if (u_outline) {
+				sdist = abs(sdist) - u_outline_thickness * 0.5;
+			}
+	
+			float alpha = antialias(sdist, scale);
+
+			// 默认 u_gamma_adjust = 1.0 
+			if (u_gamma_adjust != 1.0) {
+				alpha = pow(alpha, 1.0 / u_gamma_adjust);
+			}
+	
+			color.a *= alpha;
+
+			// color = vec4(sdist, -sdist, 0.0, 1.0);
+		} else {
+			color = vec4 (0.0, 0.0, 0.0, 0.0);
+	
+			// Color the inside of the glyph a light red
+			color += vec4 (0.5, 0,0, 0.5) * smoothstep (1.0, -1.0, sdist);
+	
+			float udist = abs(sdist);
+			float gudist = abs(gsdist);
+				
+			// Color the outline red
+			color += vec4(1.0, 0.0, 0.0, 1.0) * smoothstep(2.0, 1.0, udist);
+				
+			// Color the distance field in green
+			if (!glyphy_isinf(udist))
+				color += vec4(0.0, 0.4, 0.0, 0.4 - (abs(gsdist) / max(float(gi.nominal_size.x), float(gi.nominal_size.y))) * 4.0);
+	
+			float pdist = glyphy_point_dist(p, gi.nominal_size , u_atlas_tex, u_atlas_info, gi.atlas_pos);
+				
+			// Color points green
+			color = mix(vec4(0.0, 1,0, 0.5), color, smoothstep (0.05, 0.06, pdist));
+	
+			glyphy_arc_list_t arc_list = glyphy_arc_list(
+				p, 
+				gi.nominal_size, 
+				u_atlas_tex, 
+				u_atlas_info, 
+				gi.atlas_pos
+			);
+	
+			// Color the number of endpoints per cell blue
+			color += vec4 (0.0, 0.0, 1.0,0.4) * float(arc_list.num_endpoints) * 32.0 / 255.0;
+		}
+	
+		gl_FragColor = color;
 	}
 
 	// ================ end demo-fshader.glsl
