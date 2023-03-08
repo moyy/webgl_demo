@@ -42,7 +42,9 @@
 
             let context = Context.create(canvas);
 
-            initScene(context);
+            console.log(`============= width = ${canvas.width}, height = ${canvas.height}`);
+
+            initScene(context, canvas.width, canvas.height);
             drawScene(context);
         }
 
@@ -65,73 +67,95 @@
             context.draw();
         }
 
-        function initScene(context) {
+        function initScene(context, width, height) {
             let gl = context.gl;
 
             // ========== 第1排 ==========
-            let y = 50;
+            let y = 30;
 
             // ========== 文字 ==========
 
+            let orig_size = 1 / window.devicePixelRatio;
+            let ratio = window.devicePixelRatio;
             let shape = Glyphy.create(gl);
-            let x = 50,
+            let x = 50 * ratio,
                 angleRad = 0.0,
-                scale = 12,
+                scale = 12 / orig_size,
                 color = [0.0, 0.0, 0.0, 1.0];
-            addContext(context, shape, x, y, angleRad, scale, color);
-    
+
+            // 性能测试
+            // x = 0, y = 0;
+            // let font_size = 48;
+            // let count = 500;
+            // let loop = 0;
+            // console.log("=============== count = ", count);
+            // for (let i = 0; i < count; ++i) {
+            //     x += font_size * 1.0;
+            //     if (x > width) {
+            //         y += font_size * 1.0;
+            //         x = loop * 5.6;
+            //         if (y > height) {
+            //             loop += 1;
+            //             y = loop * 5.6;
+            //         }
+            //     }
+            //     let shape = Glyphy.create(gl);
+            //     scale = font_size / orig_size,
+            //     addContext(context, shape, x, y, angleRad, scale, color);
+            // }
+
             shape = Glyphy.create(gl);
-            x += 35,
+            x += 35 * ratio,
                 angleRad = 0.0,
-                scale = 14,
+                scale = 14 / orig_size,
                 color = [0.0, 0.0, 0.0, 1.0];
             addContext(context, shape, x, y, angleRad, scale, color);
 
             shape = Glyphy.create(gl);
-            x += 35,
+            x += 35 * ratio,
                 angleRad = 0.0,
-                scale = 16,
+                scale = 16 / orig_size,
                 color = [0.0, 0.0, 0.0, 1.0];
             addContext(context, shape, x, y, angleRad, scale, color);
 
             shape = Glyphy.create(gl);
-            x += 35,
+            x += 35 * ratio,
                 angleRad = 0.0,
-                scale = 18,
+                scale = 18 / orig_size,
                 color = [0.0, 0.0, 0.0, 1.0];
             addContext(context, shape, x, y, angleRad, scale, color);
 
             shape = Glyphy.create(gl);
-            x += 35,
+            x += 35 * ratio,
                 angleRad = 0.0,
-                scale = 20,
+                scale = 20 / orig_size,
                 color = [0.0, 0.0, 0.0, 1.0];
             addContext(context, shape, x, y, angleRad, scale, color);
 
             shape = Glyphy.create(gl);
-            x += 35,
+            x += 35 * ratio,
                 angleRad = 0.0,
-                scale = 24,
+                scale = 24 / orig_size,
                 color = [0.0, 0.0, 0.0, 1.0];
             addContext(context, shape, x, y, angleRad, scale, color);
 
             shape = Glyphy.create(gl);
-            x += 50,
+            x += 50 * ratio,
                 angleRad = 0.0,
-                scale = 50,
+                scale = 50 / orig_size,
                 color = [0.0, 0.0, 0.0, 1.0];
             addContext(context, shape, x, y, angleRad, scale, color);
 
             shape = Glyphy.create(gl);
-            x += 70,
+            x += 70 * ratio,
                 angleRad = 0.0,
-                scale = 100,
+                scale = 100 / orig_size,
                 color = [0.0, 0.0, 0.0, 1.0];
             addContext(context, shape, x, y, angleRad, scale, color);
 
             // ========== 第2排 ==========
             y += 180.545;
-            
+
             // ========== 圆 ==========
             shape = SdfCircle.create(gl, 50);
             x = 130, angleRad = 0.0, scale = 1.0;
@@ -235,7 +259,8 @@
 </head>
 
 <body onload="webGLStart();" style="background-color: #000;">
-    <canvas id="sdf" style="position:absolute; left:100px; top:30px; width:768px; height:600px;"></canvas>
+    <!-- <canvas id="sdf" style="position:absolute; left:20px; top:20px; width:800px; height:1200px;"></canvas> -->
+    <canvas id="sdf" style="position:absolute; left:20px; top:20px; width:1024px; height:600px;"></canvas>
 </body>
 
 </html>
