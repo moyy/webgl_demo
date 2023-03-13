@@ -33,19 +33,20 @@ ProgramManager.getInstance().addShader("sdf_fast_border.fs", `
         return inversesqrt(0.5 * dot(w, w));
     }
     
+    // d 和 radius 都是 设计空间中的参数
     float antialias(float scale, float radius, float d) {
         
         d *= scale;
         radius *= scale;
 
-        // 抗锯齿 1像素 
+        // 当 radius = 0.5 时候，抗锯齿 1像素 
         // d 在 [-radius, radius] 返回 [0.0, 1.0]
 
         float r = 0.5 * (1.0 - d / radius);
 
         return clamp(r, 0.0, 1.0);
     }
-
+    
     // r 半径，上左，上右，下右，下左 上右下左 r.x，r.y，r.z，r.w
     float sdfFastRoundBox(vec2 p, vec2 extent, vec4 r)
     {

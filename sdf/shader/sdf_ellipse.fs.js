@@ -75,12 +75,13 @@ ProgramManager.getInstance().addShader("sdf_ellipse.fs", `
     }
 
 
+    // d 和 radius 都是 设计空间中的参数
     float antialias(float scale, float radius, float d) {
         
         d *= scale;
         radius *= scale;
 
-        // 抗锯齿 1像素 
+        // 当 radius = 0.5 时候，抗锯齿 1像素 
         // d 在 [-radius, radius] 返回 [0.0, 1.0]
 
         float r = 0.5 * (1.0 - d / radius);
