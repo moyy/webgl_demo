@@ -272,6 +272,7 @@ ProgramManager.getInstance().addShader("glyphy.fs", `
 
 	// 重点 计算 sdf 
 	float glyphy_sdf(const vec2 p, const ivec2 nominal_size, sampler2D tex, ivec4 atlas_info, ivec2 atlas_pos) {
+
 		glyphy_arc_list_t arc_list = glyphy_arc_list(p, nominal_size, tex, atlas_info, atlas_pos);
 
 		if(arc_list.num_endpoints == 0) { // 远离 边缘，直接返回即可 
@@ -291,6 +292,7 @@ ProgramManager.getInstance().addShader("glyphy.fs", `
 		glyphy_arc_t closest_arc;
 
 		vec4 rgba = glyphy_texture1D_func(arc_list.offset, tex, atlas_info, atlas_pos).rgba;
+		
 		glyphy_arc_endpoint_t endpoint = glyphy_arc_endpoint_decode(rgba, nominal_size);
 		vec2 pp = endpoint.p;
 		
@@ -396,20 +398,6 @@ ProgramManager.getInstance().addShader("glyphy.fs", `
 
 	// ================ begin demo-fshader.glsl
 
-	// 是否调试，默认值 false 
-	uniform bool u_debug;
-	// 是否只显示边缘，默认值 false 
-	uniform bool u_outline;
-
-	// 对比度，越高越没锯齿，默认 1.0 
-	uniform float u_contrast;
-	// gamma矫正值，默认 1.0 
-	uniform float u_gamma_adjust;
-	// 边框 粗细，仅 u_outline = true默认: 0.0
-	uniform float u_outline_thickness;
-	// 粗体 默认 0.0
-	uniform float u_boldness;
-
 	// (网格的边界-宽, 网格的边界-高, z, w)
 	// z(有效位 低15位) --> (高7位:纹理偏移.x, 中6位:网格宽高.x, 低2位: 00) 
 	// w(有效位 低15位) --> (高7位:纹理偏移.y, 中6位:网格宽高.y, 低2位: 00) 
@@ -448,18 +436,9 @@ ProgramManager.getInstance().addShader("glyphy.fs", `
 
 	// 抗锯齿 1像素 
 	// d 在 [a, b] 返回 [0.0, 1.0] 
-	float antialias(float d, float scale) {
-		float a = -0.5;
-		float b = -a;
-		
-		if (scale < 1.0) {
-			d /= scale;
-		}
-
-		if (abs(dFdx(d)) < 0.06 || abs(dFdy(d)) < 0.06) {
-			a = -0.15;
-			b = -a;
-		}
+	float antialias(float d) {
+		float b = 0.5;
+		float a = -b;
 
 		float r = (-d - a) / (b - a);
 
@@ -469,74 +448,19 @@ ProgramManager.getInstance().addShader("glyphy.fs", `
 	void main() {
 		vec2 p = v_glyph.xy;
 
-		// 解码 
+		// 解码 p
 		glyph_info_t gi = glyph_info_decode(v_glyph.zw);
 	
 		// 重点：计算 SDF 
 		float gsdist = glyphy_sdf(p, gi.nominal_size, u_atlas_tex, u_atlas_info, gi.atlas_pos);
 
-		// 默认 u_boldness = 0.0 
-		gsdist -= u_boldness;
-	
 		// 均匀缩放 
 		float scale = SQRT2 / length(fwidth(p));
 
-		// 默认 u_contrast = 1.0 
-		float sdist = u_contrast * gsdist * scale;
+		float sdist = gsdist * scale;
 
-		vec4 color = vec4(0.0, 0.0, 0.0, 1.0);
-
-		// 默认 u_debug = false 
-		if (!u_debug) {
-			// 默认 u_outline = false 
-			if (u_outline) {
-				sdist = abs(sdist) - u_outline_thickness * 0.5;
-			}
-	
-			float alpha = antialias(sdist, scale);
-
-			// 默认 u_gamma_adjust = 1.0 
-			if (u_gamma_adjust != 1.0) {
-				alpha = pow(alpha, 1.0 / u_gamma_adjust);
-			}
-	
-			color.a *= alpha;
-
-			// color = vec4(sdist, -sdist, 0.0, 1.0);
-		} else {
-			color = vec4 (0.0, 0.0, 0.0, 0.0);
-	
-			// Color the inside of the glyph a light red
-			color += vec4 (0.5, 0,0, 0.5) * smoothstep (1.0, -1.0, sdist);
-	
-			float udist = abs(sdist);
-			float gudist = abs(gsdist);
-				
-			// Color the outline red
-			color += vec4(1.0, 0.0, 0.0, 1.0) * smoothstep(2.0, 1.0, udist);
-				
-			// Color the distance field in green
-			if (!glyphy_isinf(udist))
-				color += vec4(0.0, 0.4, 0.0, 0.4 - (abs(gsdist) / max(float(gi.nominal_size.x), float(gi.nominal_size.y))) * 4.0);
-	
-			float pdist = glyphy_point_dist(p, gi.nominal_size , u_atlas_tex, u_atlas_info, gi.atlas_pos);
-				
-			// Color points green
-			color = mix(vec4(0.0, 1,0, 0.5), color, smoothstep (0.05, 0.06, pdist));
-	
-			glyphy_arc_list_t arc_list = glyphy_arc_list(
-				p, 
-				gi.nominal_size, 
-				u_atlas_tex, 
-				u_atlas_info, 
-				gi.atlas_pos
-			);
-	
-			// Color the number of endpoints per cell blue
-			color += vec4 (0.0, 0.0, 1.0,0.4) * float(arc_list.num_endpoints) * 32.0 / 255.0;
-		}
-	
-		gl_FragColor = color;
+		float alpha = antialias(sdist);
+		gl_FragColor = vec4(0.0, 0.0, 0.0, alpha);
 	}
 
 	// ================ end demo-fshader.glsl

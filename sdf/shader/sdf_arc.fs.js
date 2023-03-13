@@ -9,6 +9,11 @@ ProgramManager.getInstance().addShader("sdf_arc.fs", `
     // 颜色
     uniform vec4 uColor;
 
+    // 模糊半径，值越大，模糊范围越大
+    // 正常形状：0.5
+    // 否则就是 阴影 半径
+    uniform float uAARadius;
+    
     // 圆弧 SDF 信息
     // [
     //    vec4 (布局中心.x, 布局中心.y, 布局缩放.x, 布局缩放.y),
@@ -50,27 +55,26 @@ ProgramManager.getInstance().addShader("sdf_arc.fs", `
         return length(max(pt, 0.0)) + min(max(pt.x,pt.y), 0.0);
     }
 
-    // 可以看成 fs 中 计算 统一缩放系数 的 倒数
-    float computeAARange(vec2 position) {
-        // position 变化率，放大2倍，w 0.5
+    // fs 中 计算 缩放系数
+    float getScale(vec2 position) {
+        // position 变化率，放大2倍，w=0.5
         vec2 w = fwidth(position);
         
-        // sqrt(2)/length(w) = inversesqrt(0.5 * dot(w, w))
+        // sqrt(2) / length(w) = inversesqrt(0.5 * dot(w, w))
         return inversesqrt(0.5 * dot(w, w));
     }
+    
+    float antialias(float scale, float radius, float d) {
+        
+        d *= scale;
+        radius *= scale;
 
-    // The aa_range is already stored as a reciprocal with uniform scale
-    // so just multiply it, then use that for AA.
-    float distanceAA(float recip_scale, float signed_distance) {
-        
-        float d = recip_scale * signed_distance;
-        
-        // webrender 原始 公式，太严格，导致 抗锯齿 不大 成功？
-        // d 在 [-0.5, 0.5] 之间，0.5 - d 在 [0, 1]
-        // return clamp(0.5 - d, 0.0, 1.0);
-        
-        // d 在 [-1.0, 1.0] 之间，0.5 * (1.0 + d) 在 [0, 1]
-        return clamp(0.5 * (1.0 - d), 0.0, 1.0);
+        // 抗锯齿 1像素 
+        // d 在 [-radius, radius] 返回 [0.0, 1.0]
+
+        float r = 0.5 * (1.0 - d / radius);
+
+        return clamp(r, 0.0, 1.0);
     }
 
     void main() {
@@ -100,8 +104,8 @@ ProgramManager.getInstance().addShader("sdf_arc.fs", `
             d = sdfArcFlat(pos, sc, r, w);
         }
 
-        float aaRange = computeAARange(pos);
-        float a = distanceAA(aaRange, d);
+        float s = getScale(pos);
+        float a = antialias(s, uAARadius, d);
 
         gl_FragColor = vec4(uColor.rgb, a * uColor.a);
     }

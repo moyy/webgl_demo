@@ -45,6 +45,9 @@ class SdfCircleMaterial {
 
         this.uColor = [0.0, 0.0, 1.0, 1.0];
 
+        // AA半径，对正常物体是 0.5，对 阴影是 阴影半径
+        this.uAARadius = 0.5;
+
         // 半径
         this.uRadius = 1.0;
         // obj 放大到 矩阵 的 缩放系数 (x, y, w, h)
@@ -64,6 +67,10 @@ class SdfCircleMaterial {
 
     setVertexScale(x, y, w, h) {
         this.uVertexScale = [x, y, w, h];
+    }
+
+    setAARadius(r) {
+        this.uAARadius = r;
     }
 
     setRadius(r) {
@@ -90,6 +97,9 @@ class SdfCircleMaterial {
 
         let uRadius = program.getUniform("uRadius");
         gl.uniform1f(uRadius, this.uRadius);
+
+        let uAARadius = program.getUniform("uAARadius");
+        gl.uniform1f(uAARadius, this.uAARadius);
 
         // 因为 四边形的坐标用的是 [-0.5, 0.5]，需要扩大 那么多倍 去匹配
         let uVertexScale = program.getUniform("uVertexScale");

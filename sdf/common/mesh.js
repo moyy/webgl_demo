@@ -1,13 +1,14 @@
-class Mesh {
 
+let lastUseGeometry = null;
+
+class Geometry {
     static create(gl) {
-        return new Mesh(gl);
+        return new Geometry(gl);
     }
 
     constructor(gl) {
         this.gl = gl;
-        this.material = null;
-        
+
         this.drawCount = 1;
 
         // key = string, value = VBO
@@ -17,14 +18,6 @@ class Mesh {
             id: gl.createBuffer(),
             numItems: 0,
         };
-    }
-
-    setDrawCount(count) {
-        this.drawCount = count;
-    }
-
-    setMaterial(m) {
-        this.material = m;
     }
 
     addAttribute(name, itemSize, value) {
@@ -52,19 +45,22 @@ class Mesh {
         this.ibo.numItems = indices.length;
     }
 
-    draw(camera) {
+    use(program) {
+        if (lastUseGeometry === this) {
+            return this.ibo.numItems;
+        }
+        lastUseGeometry = this;
+
         let gl = this.gl;
 
-        this.material.use(camera);
-
         for (let [name, {
-                id,
-                itemSize
-            }] of this.vbo) {
+            id,
+            itemSize
+        }] of this.vbo) {
 
             gl.bindBuffer(gl.ARRAY_BUFFER, id);
 
-            let location = this.material.program.getAttribute(name);
+            let location = program.getAttribute(name);
 
             gl.vertexAttribPointer(
                 location,
@@ -79,9 +75,49 @@ class Mesh {
         }
 
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ibo.id);
-        
+
+        return this.ibo.numItems;
+    }
+}
+
+class Mesh {
+    static create(gl, geometry = null) {
+        return new Mesh(gl, geometry);
+    }
+
+    constructor(gl, geometry = null) {
+        this.gl = gl;
+        this.drawCount = 1;
+
+        this.material = null;
+        this.geometry = geometry ? geometry : Geometry.create(gl);
+    }
+
+    setDrawCount(count) {
+        this.drawCount = count;
+    }
+
+    setMaterial(m) {
+        this.material = m;
+    }
+
+    addAttribute(name, itemSize, value) {
+        this.geometry.addAttribute(name, itemSize, value);
+    }
+
+    setIndices(indices) {
+        this.geometry.setIndices(indices);
+    }
+
+    draw(camera) {
+        let gl = this.gl;
+
+        this.material.use(camera);
+
+        let numItems = this.geometry.use(this.material.program);
+
         for (let i = 0; i < this.drawCount; ++i) {
-            gl.drawElements(gl.TRIANGLES, this.ibo.numItems, gl.UNSIGNED_SHORT, 0);
+            gl.drawElements(gl.TRIANGLES, numItems, gl.UNSIGNED_SHORT, 0);
         }
     }
 }

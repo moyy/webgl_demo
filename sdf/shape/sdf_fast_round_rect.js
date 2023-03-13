@@ -58,6 +58,9 @@ class SdfFastRoundRectMaterial {
 
         this.uColor = [0.0, 0.0, 1.0, 1.0];
 
+        // AA半径，对正常物体是 0.5，对 阴影是 阴影半径
+        this.uAARadius = 0.5;
+
         this.uWorld = mat4.create();
         mat4.identity(this.uWorld);
     }
@@ -107,5 +110,8 @@ class SdfFastRoundRectMaterial {
 
         let uBorderSdf = program.getUniform("uBorderSdf");
         gl.uniformMatrix4fv(uBorderSdf, false, this.uBorderSdf);
+
+        let uAARadius = program.getUniform("uAARadius");
+        gl.uniform1f(uAARadius, this.uAARadius);
     }
 }

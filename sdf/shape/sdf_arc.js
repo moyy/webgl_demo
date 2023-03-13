@@ -57,7 +57,10 @@ class SdfArcMaterial {
         this.program = program;
 
         this.uColor = [0.0, 0.0, 1.0, 1.0];
-
+        
+        // AA半径，对正常物体是 0.5，对 阴影是 阴影半径
+        this.uAARadius = 0.5;
+        
         this.uArcSdf = [
             0.0, 0.0, 0.0, 0.0,
             0.0, 0.0, 0.0, 0.0,
@@ -109,6 +112,9 @@ class SdfArcMaterial {
 
         let uColor = program.getUniform("uColor");
         gl.uniform4f(uColor, ...this.uColor);
+
+        let uAARadius = program.getUniform("uAARadius");
+        gl.uniform1f(uAARadius, this.uAARadius);
 
         let uArcSdf = program.getUniform("uArcSdf");
         gl.uniformMatrix4fv(uArcSdf, false, this.uArcSdf);

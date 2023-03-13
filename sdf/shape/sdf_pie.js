@@ -57,6 +57,9 @@ class SdfPieMaterial {
 
         this.uColor = [0.0, 0.0, 1.0, 1.0];
 
+        // AA半径，对正常物体是 0.5，对 阴影是 阴影半径
+        this.uAARadius = 0.5;
+
         this.uPieSdf = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
 
         this.uWorld = mat4.create();
@@ -104,5 +107,8 @@ class SdfPieMaterial {
 
         let uPieSdf = program.getUniform("uPieSdf");
         gl.uniformMatrix3fv(uPieSdf, false, this.uPieSdf);
+
+        let uAARadius = program.getUniform("uAARadius");
+        gl.uniform1f(uAARadius, this.uAARadius);
     }
 }

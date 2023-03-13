@@ -8,7 +8,7 @@ class SdfEllipse {
         ];
 
         let indices = [0, 1, 2, 0, 2, 3];
-        
+
         let e = new SdfEllipse(gl);
         let program = ProgramManager.getInstance().getProgram("sdf.vs", "sdf_ellipse.fs");
 
@@ -49,6 +49,9 @@ class SdfEllipseMaterial {
         this.uEllipseAB = [1.0, 1.0];
         // obj 放大到 矩阵 的 缩放系数 (x, y, w, h)
         this.uVertexScale = [0.0, 0.0, 1.0, 1.0];
+
+        // AA半径，对正常物体是 0.5，对 阴影是 阴影半径
+        this.uAARadius = 0.5;
 
         this.uWorld = mat4.create();
         mat4.identity(this.uWorld);
@@ -94,5 +97,8 @@ class SdfEllipseMaterial {
         // 因为 四边形的坐标用的是 [-0.5, 0.5]，需要扩大 那么多倍 去匹配
         let uVertexScale = program.getUniform("uVertexScale");
         gl.uniform4f(uVertexScale, ...this.uVertexScale);
+
+        let uAARadius = program.getUniform("uAARadius");
+        gl.uniform1f(uAARadius, this.uAARadius);
     }
 }

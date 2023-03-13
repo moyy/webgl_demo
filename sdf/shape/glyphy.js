@@ -3,30 +3,23 @@
  * 
  * 见 https://github.com/moyy/glyphy
  */
+
+let GlobalTexture = null;
+let GlobalGeometry = null;
+
 class Glyphy {
     static create(gl) {
         let e = new Glyphy(gl);
 
-        let a_glyph_vertex = [
-            -0.081039, 1.229965, 48.000000, 48.000000,
-            -0.081039, 0.068864, 48.000000, 49.000000,
-            1.080062, 1.229965, 49.000000, 48.000000,
-            -0.081039, 0.068864, 48.000000, 49.000000,
-            1.080062, 1.229965, 49.000000, 48.000000,
-            1.080062, 0.068864, 49.000000, 49.000000
-        ];
-
-        let indices = [0, 1, 2, 3, 4, 5];
-
         let program = ProgramManager.getInstance().getProgram("glyphy.vs", "glyphy.fs");
 
+        if (!GlobalGeometry) {
+            GlobalGeometry = initGeometry(gl);
+        }
+
         let material = GlyphyMaterial.create(gl, program);
-        e.mesh = Mesh.create(gl);
-
+        e.mesh = Mesh.create(gl, GlobalGeometry);
         e.mesh.setMaterial(material);
-        e.mesh.setIndices(indices);
-
-        e.mesh.addAttribute("a_glyph_vertex", 4, a_glyph_vertex);
 
         return e;
     }
@@ -41,6 +34,8 @@ class Glyphy {
     }
 }
 
+let isFirstCall = false;
+
 class GlyphyMaterial {
     static create(gl, program) {
         return new GlyphyMaterial(gl, program);
@@ -52,27 +47,12 @@ class GlyphyMaterial {
 
         this.tex_w = 512;
         this.tex_h = 512;
-        this.tex = initTexture(gl, this.tex_w, this.tex_h);
+        if (!GlobalTexture) {
+            GlobalTexture = initTexture(gl, this.tex_w, this.tex_h);
+        }
+        this.tex = GlobalTexture;
 
         this.uColor = [0.0, 0.0, 0.0, 1.0];
-
-        // 0 false, 1 true
-        this.u_debug = 0;
-        this.u_outline = 0;
-
-        // 浮点：范围
-
-        // [0.1, 10.0]
-        this.u_contrast = 1.0
-
-        // [0.1, 10.]
-        this.u_gamma_adjust = 1.0;
-
-        // [0.5, 3.0]
-        this.u_outline_thickness = 1.0;
-
-        // [-0.2, 0.48]
-        this.u_boldness = 0.0;
 
         this.uWorld = mat4.create();
         mat4.identity(this.uWorld);
@@ -90,49 +70,54 @@ class GlyphyMaterial {
         let gl = this.gl;
         let program = this.program;
 
-        gl.useProgram(this.program.id);
+        if (!isFirstCall) {
+            gl.useProgram(program.id);
+
+            gl.bindTexture(gl.TEXTURE_2D, this.tex);
+
+            let item_w = 64;
+            let item_h_q = 8;
+
+            let u_atlas_info = program.getUniform("u_atlas_info");
+            gl.uniform4i(u_atlas_info, this.tex_w, this.tex_h, item_w, item_h_q);
+
+            let u_atlas_tex = program.getUniform("u_atlas_tex");
+            gl.uniform1i(u_atlas_tex, 0);
+
+            let uColor = program.getUniform("uColor");
+            gl.uniform4f(uColor, ...this.uColor);
+
+            let uView = program.getUniform("uView");
+            gl.uniformMatrix4fv(uView, false, camera.uView);
+
+            let uProj = program.getUniform("uProj");
+            gl.uniformMatrix4fv(uProj, false, camera.uProj);
+        }
+        isFirstCall = true;
 
         let uWorld = program.getUniform("uWorld");
         gl.uniformMatrix4fv(uWorld, false, this.uWorld);
-
-        let uView = program.getUniform("uView");
-        gl.uniformMatrix4fv(uView, false, camera.uView);
-
-        let uProj = program.getUniform("uProj");
-        gl.uniformMatrix4fv(uProj, false, camera.uProj);
-
-        let uColor = program.getUniform("uColor");
-        gl.uniform4f(uColor, ...this.uColor);
-
-        let u_debug = program.getUniform("u_debug");
-        gl.uniform1f(u_debug, this.u_debug);
-
-        let u_contrast = program.getUniform("u_contrast");
-        gl.uniform1f(u_contrast, this.u_contrast);
-
-        let u_gamma_adjust = program.getUniform("u_gamma_adjust");
-        gl.uniform1f(u_gamma_adjust, this.u_gamma_adjust);
-
-        let u_outline = program.getUniform("u_outline");
-        gl.uniform1f(u_outline, this.u_outline);
-
-        let u_outline_thickness = program.getUniform("u_outline_thickness");
-        gl.uniform1f(u_outline_thickness, this.u_outline_thickness);
-
-        let u_boldness = program.getUniform("u_boldness");
-        gl.uniform1f(u_boldness, this.u_boldness);
-
-        gl.bindTexture(gl.TEXTURE_2D, this.tex);
-        let item_w = 64;
-        let item_h_q = 8;
-
-        let u_atlas_info = program.getUniform("u_atlas_info");
-        gl.uniform4i(u_atlas_info, this.tex_w, this.tex_h, item_w, item_h_q);
-
-        let u_atlas_tex = program.getUniform("u_atlas_tex");
-        gl.uniform1i(u_atlas_tex, 0);
-
     }
+}
+
+const initGeometry = (gl) => {
+    let a_glyph_vertex = [
+        -0.081039, 1.229965, 48.000000, 48.000000,
+        -0.081039, 0.068864, 48.000000, 49.000000,
+        1.080062, 1.229965, 49.000000, 48.000000,
+        -0.081039, 0.068864, 48.000000, 49.000000,
+        1.080062, 1.229965, 49.000000, 48.000000,
+        1.080062, 0.068864, 49.000000, 49.000000,
+    ];
+
+    let indices = [0, 1, 2, 3, 4, 5];
+    let geometry = Geometry.create(gl);
+
+    geometry.setIndices(indices);
+
+    geometry.addAttribute("a_glyph_vertex", 4, a_glyph_vertex);
+
+    return geometry;
 }
 
 const initTexture = (gl, tex_w, tex_h) => {
@@ -203,3 +188,4 @@ const initTexture = (gl, tex_w, tex_h) => {
 
     return tex;
 }
+

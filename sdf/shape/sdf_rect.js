@@ -50,6 +50,9 @@ class SdfRectMaterial {
 
         this.uColor = [0.0, 0.0, 1.0, 1.0];
 
+        // AA半径，对正常物体是 0.5，对 阴影是 阴影半径
+        this.uAARadius = 0.5;
+
         // 矩形 宽，高
         this.uRect = [1.0, 1.0];
         // obj 放大到 矩阵 的 缩放系数 (x, y, w, h)
@@ -99,5 +102,8 @@ class SdfRectMaterial {
         // 因为 四边形的坐标用的是 [-0.5, 0.5]，需要扩大 那么多倍 去匹配
         let uVertexScale = program.getUniform("uVertexScale");
         gl.uniform4f(uVertexScale, ...this.uVertexScale);
+
+        let uAARadius = program.getUniform("uAARadius");
+        gl.uniform1f(uAARadius, this.uAARadius);
     }
 }

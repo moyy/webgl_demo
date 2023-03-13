@@ -11,7 +11,7 @@ class SdfBorder {
 
         w /= 2;
         h /= 2;
-        
+
         let aVertexPosition = [
             ...[-w, -h],
             ...[-w, h],
@@ -60,6 +60,9 @@ class SdfBorderMaterial {
         this.program = program;
 
         this.uColor = [0.0, 0.0, 1.0, 1.0];
+
+        // AA半径，对正常物体是 0.5，对 阴影是 阴影半径
+        this.uAARadius = 0.5;
 
         this.uWorld = mat4.create();
         mat4.identity(this.uWorld);
@@ -116,5 +119,8 @@ class SdfBorderMaterial {
 
         let clipSdf = program.getUniform("clipSdf");
         gl.uniformMatrix4fv(clipSdf, false, this.clipSdf);
+
+        let uAARadius = program.getUniform("uAARadius");
+        gl.uniform1f(uAARadius, this.uAARadius);
     }
 }

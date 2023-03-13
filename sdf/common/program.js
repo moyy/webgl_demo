@@ -29,17 +29,17 @@ class ProgramManager {
 
     // return class Program
     getProgram(vsKey, fsKey) {
-        let program = this.programMap.get([vsKey, fsKey]);
+        const key = `${vsKey}:${fsKey}`;
+        let program = this.programMap.get(key);
         if (!program) {
             program = this._createProgram(vsKey, fsKey);
         }
-        this.programMap.set([vsKey, fsKey], program);
+        this.programMap.set(key, program);
         return program;
     }
 
     _createProgram(vsKey, fsKey) {
         let gl = this.gl;
-
         let vsSource = this.sourceMap.get(vsKey);
         let fsSource = this.sourceMap.get(fsKey);
 
